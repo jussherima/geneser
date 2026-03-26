@@ -1,10 +1,13 @@
-use crate::generators::{files, flutter, pubspec, structure};
+use crate::generators::{files, flutter, pubspec, root_files, structure};
+use crate::models::fybego_options::{FirebaseLevel, FybegoOptions, ObservabilityLevel};
 use crate::models::options::{ExtraPackage, RoutingSolution, StateManagement};
 use crate::templates::custom::CustomTemplate;
 use crate::templates::cwa::CwaTemplate;
+use crate::templates::fybego::FybegoTemplate;
 use crate::ui::prompts;
 use anyhow::Result;
 use console::style;
+use std::collections::HashMap;
 
 pub fn run(name: Option<String>) -> Result<()> {
     println!("\n  {}", style("Geneser CLI").bold().cyan());
@@ -18,95 +21,131 @@ pub fn run(name: Option<String>) -> Result<()> {
     let templates = [
         "CodeWithAndrea (Feature-first)",
         "Custom (Choisir packages)",
+        "Fybego (Production-grade)",
     ];
     let template_idx = prompts::ask_select("Choisissez un template:", &templates, 0)?;
 
-    let config = if template_idx == 0 {
-        // CWA Workflow
-        let features = vec![
-            "authentication",
-            "home",
-            "products",
-            "cart",
-            "orders",
-            "reviews",
-        ];
+    let is_fybego = template_idx == 2;
 
-        // Defaults to true for basic features
-        let defaults = vec![true, true, false, false, false, false];
+    let config = match template_idx {
+        0 => {
+            // CWA Workflow
+            let features = vec![
+                "authentication",
+                "home",
+                "products",
+                "cart",
+                "orders",
+                "reviews",
+            ];
+            let defaults = vec![true, true, false, false, false, false];
+            let selected_indices = prompts::ask_multiselect(
+                "Quelles features voulez-vous generer ?",
+                &features,
+                &defaults,
+            )?;
+            let selected_features: Vec<String> = selected_indices
+                .iter()
+                .map(|&i| features[i as usize].to_string())
+                .collect();
+            CwaTemplate::build_config(&project_name, selected_features)
+        }
+        1 => {
+            // Custom Workflow
+            let state_options = [
+                StateManagement::Riverpod,
+                StateManagement::Bloc,
+                StateManagement::GetX,
+                StateManagement::Provider,
+            ];
+            let state_idx = prompts::ask_select("State Management:", &state_options, 0)?;
+            let state_management = state_options[state_idx];
 
-        let selected_indices = prompts::ask_multiselect(
-            "Quelles features voulez-vous generer ?",
-            &features,
-            &defaults,
-        )?;
+            let routing_options = [
+                RoutingSolution::GoRouter,
+                RoutingSolution::AutoRoute,
+                RoutingSolution::GetXRouting,
+                RoutingSolution::Navigator2,
+            ];
+            let routing_idx = prompts::ask_select("Routing:", &routing_options, 0)?;
+            let routing = routing_options[routing_idx];
 
-        let selected_features: Vec<String> = selected_indices
-            .iter()
-            .map(|&i| features[i as usize].to_string())
-            .collect();
+            let extra_options = [
+                ExtraPackage::Drift,
+                ExtraPackage::Dio,
+                ExtraPackage::Freezed,
+                ExtraPackage::FlutterGen,
+                ExtraPackage::Hive,
+                ExtraPackage::SharedPreferences,
+                ExtraPackage::Firebase,
+                ExtraPackage::Equatable,
+                ExtraPackage::Dartz,
+                ExtraPackage::Intl,
+            ];
+            let defaults = vec![false; extra_options.len()];
+            let selected_extra_indices =
+                prompts::ask_multiselect("Packages additionnels:", &extra_options, &defaults)?;
+            let extras: Vec<ExtraPackage> = selected_extra_indices
+                .iter()
+                .map(|&i| extra_options[i])
+                .collect();
 
-        CwaTemplate::build_config(&project_name, selected_features)
-    } else {
-        // Custom Workflow
-        let state_options = [
-            StateManagement::Riverpod,
-            StateManagement::Bloc,
-            StateManagement::GetX,
-            StateManagement::Provider,
-        ];
-        let state_idx = prompts::ask_select("State Management:", &state_options, 0)?;
-        let state_management = state_options[state_idx];
+            let basic_features = vec!["authentication", "home"];
+            let feature_defaults = vec![true, true];
+            let selected_feature_indices =
+                prompts::ask_multiselect("Features de base:", &basic_features, &feature_defaults)?;
+            let selected_features: Vec<String> = selected_feature_indices
+                .iter()
+                .map(|&i| basic_features[i as usize].to_string())
+                .collect();
 
-        let routing_options = [
-            RoutingSolution::GoRouter,
-            RoutingSolution::AutoRoute,
-            RoutingSolution::GetXRouting,
-            RoutingSolution::Navigator2,
-        ];
-        let routing_idx = prompts::ask_select("Routing:", &routing_options, 0)?;
-        let routing = routing_options[routing_idx];
+            CustomTemplate::build_config(
+                &project_name,
+                selected_features,
+                state_management,
+                routing,
+                extras,
+            )
+        }
+        2 => {
+            // Fybego Workflow
+            let firebase_options = [
+                FirebaseLevel::None,
+                FirebaseLevel::AuthFirestore,
+                FirebaseLevel::Full,
+            ];
+            let firebase_idx =
+                prompts::ask_select("Firebase:", &firebase_options, 0)?;
 
-        let extra_options = [
-            ExtraPackage::Drift,
-            ExtraPackage::Dio,
-            ExtraPackage::Freezed,
-            ExtraPackage::FlutterGen,
-            ExtraPackage::Hive,
-            ExtraPackage::SharedPreferences,
-            ExtraPackage::Firebase,
-            ExtraPackage::Equatable,
-            ExtraPackage::Dartz,
-            ExtraPackage::Intl,
-        ];
-        // default all false
-        let defaults = vec![false; extra_options.len()];
-        let selected_extra_indices =
-            prompts::ask_multiselect("Packages additionnels:", &extra_options, &defaults)?;
+            let obs_options = [
+                ObservabilityLevel::None,
+                ObservabilityLevel::Sentry,
+                ObservabilityLevel::SentryAnalytics,
+            ];
+            let obs_idx =
+                prompts::ask_select("Observabilite:", &obs_options, 0)?;
 
-        let extras: Vec<ExtraPackage> = selected_extra_indices
-            .iter()
-            .map(|&i| extra_options[i])
-            .collect();
+            let extra_features = vec!["profile", "settings", "notifications"];
+            let feature_defaults = vec![false, false, false];
+            let selected_feature_indices = prompts::ask_multiselect(
+                "Features additionnelles (home toujours inclus):",
+                &extra_features,
+                &feature_defaults,
+            )?;
+            let selected_features: Vec<String> = selected_feature_indices
+                .iter()
+                .map(|&i| extra_features[i as usize].to_string())
+                .collect();
 
-        // Simple feature selection for custom
-        let basic_features = vec!["authentication", "home"];
-        let feature_defaults = vec![true, true];
-        let selected_feature_indices =
-            prompts::ask_multiselect("Features de base:", &basic_features, &feature_defaults)?;
+            let options = FybegoOptions {
+                firebase: firebase_options[firebase_idx],
+                observability: obs_options[obs_idx],
+                features: selected_features,
+            };
 
-        let selected_features: Vec<String> = selected_feature_indices
-            .iter()
-            .map(|&i| basic_features[i as usize].to_string())
-            .collect();
-
-        CustomTemplate::build_config(
-            &project_name,
-            selected_features,
-            state_management,
-            routing,
-            extras,
-        )
+            FybegoTemplate::build_config(&project_name, &options)
+        }
+        _ => unreachable!(),
     };
 
     println!("\n{}", style("Recapitulatif :").bold());
@@ -135,20 +174,47 @@ pub fn run(name: Option<String>) -> Result<()> {
     println!("  {} {} dossiers crees.", style("✓").green(), dirs_created);
 
     // Step 3: Generate files
-    let files_created = files::generate(&project_name, &project_name, &config.structure)?;
+    let files_created = if is_fybego {
+        let tmpl_map = FybegoTemplate::templates(&project_name);
+        files::generate_fybego(
+            &project_name,
+            &project_name,
+            &config.structure,
+            &config.flags,
+            &tmpl_map,
+        )?
+    } else {
+        files::generate(&project_name, &project_name, &config.structure)?
+    };
     println!(
         "  {} {} fichiers generes.",
         style("✓").green(),
         files_created
     );
 
-    // Step 4: Update pubspec & get
+    // Step 4: Root files (fybego only)
+    if is_fybego && !config.root_files.is_empty() {
+        let mut vars = HashMap::new();
+        vars.insert("project_name".to_string(), project_name.clone());
+        let root_count =
+            root_files::generate(&project_name, &config.root_files, &vars, &config.flags)?;
+        println!(
+            "  {} {} fichiers racine generes.",
+            style("✓").green(),
+            root_count
+        );
+    }
+
+    // Step 5: Update pubspec & get
     pubspec::add_dependencies(&project_name, &config.packages)?;
+    if is_fybego && !config.dev_packages.is_empty() {
+        pubspec::add_dev_dependencies(&project_name, &config.dev_packages)?;
+    }
     flutter::pub_get(&project_name)?;
     println!(
         "  {} {} packages ajoutes.",
         style("✓").green(),
-        config.packages.len()
+        config.packages.len() + config.dev_packages.len()
     );
 
     println!(

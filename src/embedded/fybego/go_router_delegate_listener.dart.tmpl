@@ -1,0 +1,20 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Listens to GoRouter delegate changes for analytics screen tracking.
+class GoRouterDelegateListener extends ConsumerStatefulWidget {
+  const GoRouterDelegateListener({required this.child, super.key});
+  final Widget child;
+
+  @override
+  ConsumerState<GoRouterDelegateListener> createState() =>
+      _GoRouterDelegateListenerState();
+}
+
+class _GoRouterDelegateListenerState
+    extends ConsumerState<GoRouterDelegateListener> {
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}

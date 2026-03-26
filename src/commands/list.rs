@@ -10,6 +10,9 @@ pub fn run() -> Result<()> {
     println!("  - {}", style("Custom").green().bold());
     println!("    Selection manuelle du State Management et Routing.");
 
+    println!("  - {}", style("Fybego").green().bold());
+    println!("    Production-grade avec Riverpod, GoRouter, Firebase et Sentry optionnels.");
+
     println!();
     Ok(())
 }

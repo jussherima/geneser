@@ -1,0 +1,8 @@
+enum AppExceptionCode {
+  network,
+  dataNotFound,
+{{#if firebase}}  unauthenticated,
+  wrongPassword,
+  emailAlreadyInUse,
+{{/if firebase}}  unknown,
+}

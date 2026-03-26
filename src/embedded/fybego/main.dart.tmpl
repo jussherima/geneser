@@ -1,0 +1,40 @@
+import 'dart:async';
+
+{{#if firebase}}import 'package:firebase_core/firebase_core.dart';
+{{/if firebase}}import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+{{#if sentry}}import 'package:sentry_flutter/sentry_flutter.dart';
+{{/if sentry}}import 'package:{{project_name}}/src/{{project_name}}_app.dart';
+{{#if sentry}}import 'package:{{project_name}}/src/services/error_logger.dart';
+{{/if sentry}}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+{{#if sentry}}
+
+  await SentryFlutter.init((options) {
+    options
+      ..dsn = const String.fromEnvironment('SENTRY_DSN')
+      ..tracesSampleRate = 1.0;
+  });
+{{/if sentry}}
+{{#if firebase}}
+
+  await Firebase.initializeApp();
+{{/if firebase}}
+
+  final container = ProviderContainer();
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const {{project_name_pascal}}App(),
+    ),
+  );
+}
