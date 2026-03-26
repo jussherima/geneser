@@ -1,0 +1,25 @@
+name: livreo
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter_riverpod: any
+  riverpod_annotation: any
+  riverpod_generator: any
+  go_router: any
+  freezed_annotation: any
+  json_annotation: any
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

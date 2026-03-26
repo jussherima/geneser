@@ -1,0 +1,28 @@
+use anyhow::{Context, Result};
+use std::fs;
+use std::path::Path;
+
+pub fn add_dependencies(project_dir: &str, packages: &[String]) -> Result<()> {
+    if packages.is_empty() {
+        return Ok(());
+    }
+
+    let pubspec_path = Path::new(project_dir).join("pubspec.yaml");
+    let mut pubspec = fs::read_to_string(&pubspec_path).context("Could not read pubspec.yaml")?;
+
+    let deps_marker = "dependencies:\n";
+    if let Some(pos) = pubspec.find(deps_marker) {
+        let mut new_deps = String::new();
+        for pkg in packages {
+            // Very simple approach: append to dependencies block
+            // In production, using yaml-rust or simply `flutter pub add` is safer
+            new_deps.push_str(&format!("  {}: any\n", pkg));
+        }
+        pubspec.insert_str(pos + deps_marker.len(), &new_deps);
+        fs::write(&pubspec_path, pubspec)?;
+    } else {
+        anyhow::bail!("Could not find dependencies block in pubspec.yaml");
+    }
+
+    Ok(())
+}

@@ -1,0 +1,15 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part '{{feature_name_snake}}_model.freezed.dart';
+part '{{feature_name_snake}}_model.g.dart';
+
+@freezed
+class {{feature_name_pascal}}Model with _${{feature_name_pascal}}Model {
+  const factory {{feature_name_pascal}}Model({
+    required String id,
+    // TODO: Add properties
+  }) = _{{feature_name_pascal}}Model;
+
+  factory {{feature_name_pascal}}Model.fromJson(Map<String, dynamic> json) =>
+      _${{feature_name_pascal}}ModelFromJson(json);
+}
