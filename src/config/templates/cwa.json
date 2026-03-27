@@ -1,0 +1,53 @@
+{
+  "name": "CodeWithAndrea (Feature-first)",
+  "description": "Feature-first architecture by Andrea Bizzotto",
+  "state_management": "riverpod",
+  "routing": "go_router",
+  "prompts": [
+    {
+      "id": "features",
+      "label": "Features a generer",
+      "type": "multiselect",
+      "options": ["authentication", "home", "products", "cart", "orders", "reviews"]
+    }
+  ],
+  "packages": {
+    "base": [
+      "flutter_riverpod",
+      "riverpod_annotation",
+      "riverpod_generator",
+      "go_router",
+      "freezed_annotation",
+      "json_annotation"
+    ],
+    "conditional": {}
+  },
+  "dev_packages": {
+    "base": [],
+    "conditional": {}
+  },
+  "structure": {
+    "base": {
+      "lib": ["main.dart"],
+      "lib/src": [],
+      "lib/src/common_widgets": ["async_value_widget.dart", "empty_placeholder_widget.dart"],
+      "lib/src/constants": ["app_sizes.dart"],
+      "lib/src/exceptions": ["app_exception.dart"],
+      "lib/src/localization": ["string_hardcoded.dart"],
+      "lib/src/routing": ["app_router.dart", "not_found_screen.dart"],
+      "lib/src/utils": ["delay.dart", "extensions.dart"],
+      "lib/src/features": []
+    },
+    "conditional": {}
+  },
+  "root_files": [],
+  "flags": {},
+  "features_path": "lib/src/features",
+  "feature_template": {
+    "{feature}": [],
+    "{feature}/presentation": ["{feature}_screen.dart"],
+    "{feature}/application": ["{feature}_service.dart"],
+    "{feature}/domain": ["{feature}_model.dart"],
+    "{feature}/data": ["{feature}_repository.dart"]
+  }
+}

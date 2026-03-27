@@ -1,0 +1,107 @@
+{
+  "name": "CodeWithAndrea (Medium)",
+  "description": "Production-grade architecture inspired by CodeWithAndrea medium structure",
+  "state_management": "riverpod",
+  "routing": "go_router",
+  "prompts": [
+    {
+      "id": "firebase",
+      "label": "Firebase",
+      "type": "select",
+      "options": ["none", "auth_firestore", "full"]
+    },
+    {
+      "id": "observability",
+      "label": "Observabilite",
+      "type": "select",
+      "options": ["none", "sentry", "sentry_analytics"]
+    },
+    {
+      "id": "features",
+      "label": "Features additionnelles (home toujours inclus)",
+      "type": "multiselect",
+      "options": ["profile", "settings", "notifications"]
+    }
+  ],
+  "packages": {
+    "base": [
+      "flutter_riverpod",
+      "riverpod_annotation",
+      "go_router",
+      "equatable",
+      "freezed_annotation",
+      "json_annotation"
+    ],
+    "conditional": {
+      "firebase_auth": ["firebase_core", "firebase_auth", "cloud_firestore"],
+      "firebase_full": [
+        "firebase_core",
+        "firebase_auth",
+        "cloud_firestore",
+        "cloud_functions",
+        "firebase_storage",
+        "firebase_messaging"
+      ],
+      "sentry": ["sentry_flutter"],
+      "analytics": ["mixpanel_flutter"]
+    }
+  },
+  "dev_packages": {
+    "base": [
+      "very_good_analysis",
+      "build_runner",
+      "riverpod_generator",
+      "riverpod_lint",
+      "custom_lint",
+      "freezed",
+      "json_serializable"
+    ],
+    "conditional": {}
+  },
+  "structure": {
+    "base": {
+      "lib": ["main.dart"],
+      "lib/src": ["{project_name}_app.dart"],
+      "lib/src/common_widgets": ["error_placeholder.dart", "empty_placeholder.dart"],
+      "lib/src/constants": ["app_sizes.dart"],
+      "lib/src/exceptions": ["app_exception.dart", "app_exception_code.dart"],
+      "lib/src/localization": ["string_hardcoded.dart"],
+      "lib/src/routing": [
+        "app_router.dart",
+        "app_route.dart",
+        "route_names.dart",
+        "routes.dart"
+      ],
+      "lib/src/routing/initialization": [
+        "app_startup_controller.dart",
+        "app_startup_widget_wrapper.dart"
+      ],
+      "lib/src/services": ["error_logger.dart"],
+      "lib/src/utils": ["ref_extension.dart", "string_extension.dart"],
+      "lib/src/features": [],
+      "lib/src/features/home": [],
+      "lib/src/features/home/presentation": ["home_screen.dart"]
+    },
+    "conditional": {
+      "sentry": {
+        "lib/src/routing": ["go_router_delegate_listener.dart"]
+      }
+    }
+  },
+  "root_files": [".fvmrc", "analysis_options.yaml", "lefthook.yaml", "commitlint.config.js", "package.json"],
+  "flags": {
+    "firebase": "firebase != none",
+    "firebase_auth": "firebase == auth_firestore",
+    "firebase_full": "firebase == full",
+    "sentry": "observability != none",
+    "analytics": "observability == sentry_analytics"
+  },
+  "features_path": "lib/src/features",
+  "feature_template": {
+    "{feature}": [],
+    "{feature}/presentation": ["{feature}_screen.dart"],
+    "{feature}/application": [],
+    "{feature}/domain": [],
+    "{feature}/data": []
+  }
+}

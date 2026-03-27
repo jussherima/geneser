@@ -1,0 +1,93 @@
+{
+  "name": "Feature-First MVVM + GetX",
+  "description": "Architecture Feature-First avec pattern MVVM et GetX comme state manager",
+  "state_management": "getx",
+  "routing": "getx",
+  "prompts": [
+    {
+      "id": "storage",
+      "label": "Stockage local",
+      "type": "select",
+      "options": ["none", "get_storage", "hive"]
+    },
+    {
+      "id": "network",
+      "label": "Client HTTP",
+      "type": "select",
+      "options": ["none", "dio", "http"]
+    },
+    {
+      "id": "features",
+      "label": "Features a generer",
+      "type": "multiselect",
+      "options": ["auth", "home", "profile", "settings", "dashboard"]
+    }
+  ],
+  "packages": {
+    "base": [
+      "get",
+      "equatable"
+    ],
+    "conditional": {
+      "use_get_storage": ["get_storage"],
+      "use_hive": ["hive", "hive_flutter"],
+      "use_dio": ["dio", "pretty_dio_logger"],
+      "use_http": ["http"]
+    }
+  },
+  "dev_packages": {
+    "base": [
+      "build_runner"
+    ],
+    "conditional": {
+      "use_hive": ["hive_generator"]
+    }
+  },
+  "structure": {
+    "base": {
+      "lib": ["main.dart"],
+      "lib/app": ["app.dart"],
+      "lib/app/bindings": ["initial_binding.dart"],
+      "lib/app/routes": ["app_pages.dart", "app_routes.dart"],
+      "lib/app/themes": ["app_theme.dart"],
+      "lib/core": [],
+      "lib/core/constants": ["app_constants.dart"],
+      "lib/core/errors": ["app_error.dart"],
+      "lib/core/extensions": ["context_extensions.dart", "string_extensions.dart"],
+      "lib/core/utils": ["validators.dart"],
+      "lib/core/widgets": ["loading_widget.dart", "error_widget.dart"],
+      "lib/features": []
+    },
+    "conditional": {
+      "use_dio": {
+        "lib/core/network": ["dio_client.dart", "interceptors.dart"]
+      },
+      "use_http": {
+        "lib/core/network": ["http_client.dart"]
+      },
+      "use_get_storage": {
+        "lib/core/storage": ["storage_service.dart"]
+      },
+      "use_hive": {
+        "lib/core/storage": ["hive_service.dart"]
+      }
+    }
+  },
+  "root_files": [],
+  "flags": {
+    "use_get_storage": "storage == get_storage",
+    "use_hive": "storage == hive",
+    "use_dio": "network == dio",
+    "use_http": "network == http"
+  },
+  "features_path": "lib/features",
+  "feature_template": {
+    "{feature}": [],
+    "{feature}/bindings": ["{feature}_binding.dart"],
+    "{feature}/controllers": ["{feature}_controller.dart"],
+    "{feature}/models": ["{feature}_model.dart"],
+    "{feature}/repositories": ["{feature}_repository.dart"],
+    "{feature}/views": ["{feature}_view.dart"],
+    "{feature}/views/widgets": []
+  }
+}

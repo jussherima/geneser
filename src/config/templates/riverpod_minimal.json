@@ -1,0 +1,96 @@
+{
+  "name": "Riverpod + Freezed (Minimal)",
+  "description": "Architecture minimaliste Feature-First avec Riverpod, Freezed et go_router",
+  "state_management": "riverpod",
+  "routing": "go_router",
+  "prompts": [
+    {
+      "id": "network",
+      "label": "Client HTTP",
+      "type": "select",
+      "options": ["none", "dio", "http"]
+    },
+    {
+      "id": "persistence",
+      "label": "Persistance locale",
+      "type": "select",
+      "options": ["none", "shared_preferences", "hive"]
+    },
+    {
+      "id": "features",
+      "label": "Features a generer",
+      "type": "multiselect",
+      "options": ["auth", "home", "profile", "settings"]
+    }
+  ],
+  "packages": {
+    "base": [
+      "flutter_riverpod",
+      "riverpod_annotation",
+      "go_router",
+      "freezed_annotation",
+      "json_annotation"
+    ],
+    "conditional": {
+      "use_dio": ["dio"],
+      "use_http": ["http"],
+      "use_shared_prefs": ["shared_preferences"],
+      "use_hive": ["hive", "hive_flutter"]
+    }
+  },
+  "dev_packages": {
+    "base": [
+      "build_runner",
+      "riverpod_generator",
+      "riverpod_lint",
+      "custom_lint",
+      "freezed",
+      "json_serializable"
+    ],
+    "conditional": {
+      "use_hive": ["hive_generator"]
+    }
+  },
+  "structure": {
+    "base": {
+      "lib": ["main.dart"],
+      "lib/src": [],
+      "lib/src/app": ["app.dart"],
+      "lib/src/routing": ["app_router.dart", "app_router.g.dart"],
+      "lib/src/common_widgets": ["async_value_widget.dart"],
+      "lib/src/constants": ["app_sizes.dart", "app_styles.dart"],
+      "lib/src/exceptions": ["app_exception.dart"],
+      "lib/src/utils": ["extensions.dart"],
+      "lib/src/features": []
+    },
+    "conditional": {
+      "use_dio": {
+        "lib/src/network": ["api_client.dart"]
+      },
+      "use_http": {
+        "lib/src/network": ["http_client.dart"]
+      },
+      "use_shared_prefs": {
+        "lib/src/storage": ["shared_prefs_provider.dart"]
+      },
+      "use_hive": {
+        "lib/src/storage": ["hive_provider.dart"]
+      }
+    }
+  },
+  "root_files": [],
+  "flags": {
+    "use_dio": "network == dio",
+    "use_http": "network == http",
+    "use_shared_prefs": "persistence == shared_preferences",
+    "use_hive": "persistence == hive"
+  },
+  "features_path": "lib/src/features",
+  "feature_template": {
+    "{feature}": [],
+    "{feature}/presentation": ["{feature}_screen.dart"],
+    "{feature}/providers": ["{feature}_provider.dart"],
+    "{feature}/models": ["{feature}_model.dart"],
+    "{feature}/repositories": ["{feature}_repository.dart"]
+  }
+}

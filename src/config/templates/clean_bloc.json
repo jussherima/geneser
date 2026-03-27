@@ -1,0 +1,124 @@
+{
+  "name": "Clean Architecture + BLoC",
+  "description": "Clean Architecture (data/domain/presentation) avec BLoC/Cubit comme state manager",
+  "state_management": "bloc",
+  "routing": "go_router",
+  "prompts": [
+    {
+      "id": "network",
+      "label": "Client HTTP",
+      "type": "select",
+      "options": ["none", "dio", "http"]
+    },
+    {
+      "id": "local_db",
+      "label": "Base de donnees locale",
+      "type": "select",
+      "options": ["none", "drift", "hive", "shared_preferences"]
+    },
+    {
+      "id": "injection",
+      "label": "Injection de dependances",
+      "type": "select",
+      "options": ["get_it", "injectable"]
+    },
+    {
+      "id": "features",
+      "label": "Features a generer",
+      "type": "multiselect",
+      "options": ["auth", "home", "profile", "settings", "dashboard"]
+    }
+  ],
+  "packages": {
+    "base": [
+      "flutter_bloc",
+      "equatable",
+      "go_router",
+      "dartz",
+      "freezed_annotation"
+    ],
+    "conditional": {
+      "use_get_it": ["get_it"],
+      "use_injectable": ["get_it", "injectable"],
+      "use_dio": ["dio", "pretty_dio_logger"],
+      "use_http": ["http"],
+      "use_drift": ["drift", "sqlite3_flutter_libs", "path_provider", "path"],
+      "use_hive": ["hive", "hive_flutter"],
+      "use_shared_prefs": ["shared_preferences"]
+    }
+  },
+  "dev_packages": {
+    "base": [
+      "build_runner",
+      "freezed",
+      "bloc_test",
+      "mocktail"
+    ],
+    "conditional": {
+      "use_injectable": ["injectable_generator"],
+      "use_drift": ["drift_dev"],
+      "use_hive": ["hive_generator"]
+    }
+  },
+  "structure": {
+    "base": {
+      "lib": ["main.dart"],
+      "lib/app": ["app.dart"],
+      "lib/app/router": ["app_router.dart", "app_routes.dart"],
+      "lib/app/themes": ["app_theme.dart", "app_colors.dart"],
+      "lib/core": [],
+      "lib/core/constants": ["app_constants.dart"],
+      "lib/core/errors": ["failures.dart", "exceptions.dart"],
+      "lib/core/extensions": ["context_extensions.dart"],
+      "lib/core/usecases": ["usecase.dart"],
+      "lib/core/widgets": ["loading_widget.dart", "error_widget.dart"],
+      "lib/features": []
+    },
+    "conditional": {
+      "use_dio": {
+        "lib/core/network": ["dio_client.dart", "network_info.dart", "interceptors.dart"]
+      },
+      "use_http": {
+        "lib/core/network": ["http_client.dart", "network_info.dart"]
+      },
+      "use_injectable": {
+        "lib/injection": ["injection_container.dart", "injection_container.config.dart"]
+      },
+      "use_get_it": {
+        "lib/injection": ["injection_container.dart"]
+      },
+      "use_drift": {
+        "lib/core/local_db": ["app_database.dart", "app_database.g.dart"]
+      },
+      "use_shared_prefs": {
+        "lib/core/local_db": ["local_storage_service.dart"]
+      }
+    }
+  },
+  "root_files": [],
+  "flags": {
+    "use_get_it": "injection == get_it",
+    "use_injectable": "injection == injectable",
+    "use_dio": "network == dio",
+    "use_http": "network == http",
+    "use_drift": "local_db == drift",
+    "use_hive": "local_db == hive",
+    "use_shared_prefs": "local_db == shared_preferences"
+  },
+  "features_path": "lib/features",
+  "feature_template": {
+    "{feature}/presentation/pages": ["{feature}_page.dart"],
+    "{feature}/presentation/widgets": [],
+    "{feature}/presentation/bloc": [
+      "{feature}_bloc.dart",
+      "{feature}_event.dart",
+      "{feature}_state.dart"
+    ],
+    "{feature}/domain/entities": ["{feature}_entity.dart"],
+    "{feature}/domain/repositories": ["{feature}_repository.dart"],
+    "{feature}/domain/usecases": ["get_{feature}.dart"],
+    "{feature}/data/models": ["{feature}_model.dart"],
+    "{feature}/data/repositories": ["{feature}_repository_impl.dart"],
+    "{feature}/data/datasources": ["{feature}_remote_datasource.dart"]
+  }
+}

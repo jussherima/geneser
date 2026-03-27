@@ -1,0 +1,65 @@
+{
+  "_comment": "Exemple de template communautaire. Copiez ce fichier, adaptez-le, et publiez sur GitHub.",
+
+  "name": "Mon Architecture Custom",
+  "description": "Description courte affichee dans le menu de selection",
+  "state_management": "riverpod",
+  "routing": "go_router",
+
+  "docs_path": "docs/ARCHITECTURE.md",
+
+  "prompts": [
+    {
+      "id": "my_option",
+      "label": "Mon option",
+      "type": "select",
+      "options": ["none", "option_a", "option_b"]
+    },
+    {
+      "id": "features",
+      "label": "Features a generer",
+      "type": "multiselect",
+      "options": ["home", "auth", "profile"]
+    }
+  ],
+
+  "packages": {
+    "base": ["flutter_riverpod", "go_router"],
+    "conditional": {
+      "use_option_a": ["some_package"]
+    }
+  },
+
+  "dev_packages": {
+    "base": ["build_runner"],
+    "conditional": {}
+  },
+
+  "structure": {
+    "base": {
+      "lib": ["main.dart"],
+      "lib/src": [],
+      "lib/src/features": []
+    },
+    "conditional": {
+      "use_option_a": {
+        "lib/src/extra": ["extra_service.dart"]
+      }
+    }
+  },
+
+  "root_files": [],
+
+  "flags": {
+    "use_option_a": "my_option == option_a",
+    "use_option_b": "my_option == option_b"
+  },
+
+  "features_path": "lib/src/features",
+  "feature_template": {
+    "{feature}": [],
+    "{feature}/presentation": ["{feature}_screen.dart"],
+    "{feature}/domain": ["{feature}_model.dart"],
+    "{feature}/data": ["{feature}_repository.dart"]
+  }
+}
