@@ -1,0 +1,27 @@
+{
+  "name": "geneser",
+  "version": "1.0.0",
+  "description": "CLI tool to generate Flutter project architectures from famous templates",
+  "bin": {
+    "geneser": "bin/geneser"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "optionalDependencies": {
+    "geneser-linux-x64": "1.0.0",
+    "geneser-darwin-x64": "1.0.0",
+    "geneser-darwin-arm64": "1.0.0",
+    "geneser-windows-x64": "1.0.0"
+  },
+  "os": ["linux", "darwin", "win32"],
+  "cpu": ["x64", "arm64"],
+  "engines": {
+    "node": ">=14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DASN/geneser"
+  },
+  "license": "MIT"
+}

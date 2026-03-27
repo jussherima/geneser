@@ -70,3 +70,69 @@ jobs:
         with:
           files: release-assets/*
           generate_release_notes: true
+
+  npm-publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Copy binaries into platform packages
+        run: |
+          cp artifacts/geneser-linux-x64/geneser   npm/geneser-linux-x64/geneser
+          cp artifacts/geneser-macos-x64/geneser    npm/geneser-darwin-x64/geneser
+          cp artifacts/geneser-macos-arm64/geneser  npm/geneser-darwin-arm64/geneser
+          cp "artifacts/geneser-windows-x64.exe/geneser.exe" npm/geneser-windows-x64/geneser.exe
+          chmod +x npm/geneser-linux-x64/geneser npm/geneser-darwin-x64/geneser npm/geneser-darwin-arm64/geneser
+
+      - name: Set versions
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          for pkg in npm/geneser npm/geneser-linux-x64 npm/geneser-darwin-x64 npm/geneser-darwin-arm64 npm/geneser-windows-x64; do
+            node -e "
+              const fs = require('fs');
+              const p = fs.readFileSync('$pkg/package.json', 'utf8');
+              const j = JSON.parse(p);
+              j.version = '$VERSION';
+              if (j.optionalDependencies) {
+                for (const k of Object.keys(j.optionalDependencies)) {
+                  j.optionalDependencies[k] = '$VERSION';
+                }
+              }
+              fs.writeFileSync('$pkg/package.json', JSON.stringify(j, null, 2) + '\n');
+            "
+          done
+
+      - name: Publish platform packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          for pkg in geneser-linux-x64 geneser-darwin-x64 geneser-darwin-arm64 geneser-windows-x64; do
+            cd npm/$pkg
+            npm publish --access public
+            cd ../..
+          done
+
+      - name: Publish main package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd npm/geneser
+          npm publish --access public
