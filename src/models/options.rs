@@ -1,6 +1,81 @@
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VersionStrategy {
+    Stable,
+    Latest,
+}
+
+impl fmt::Display for VersionStrategy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            VersionStrategy::Stable => write!(f, "Stable (versions pinned)"),
+            VersionStrategy::Latest => write!(f, "Latest (any)"),
+        }
+    }
+}
+
+impl VersionStrategy {
+    /// Returns the pinned stable version constraint for a known package,
+    /// or `"any"` if the package is unknown (fallback to latest).
+    pub fn version_for(&self, pkg: &str) -> String {
+        match self {
+            VersionStrategy::Latest => "any".to_string(),
+            VersionStrategy::Stable => stable_version(pkg)
+                .unwrap_or("any")
+                .to_string(),
+        }
+    }
+}
+
+fn stable_version(pkg: &str) -> Option<&'static str> {
+    match pkg {
+        // State management
+        "flutter_riverpod" => Some("^2.5.1"),
+        "riverpod_annotation" => Some("^2.3.5"),
+        "riverpod_generator" => Some("^2.4.0"),
+        "hooks_riverpod" => Some("^2.5.2"),
+        "flutter_hooks" => Some("^0.20.5"),
+        "flutter_bloc" => Some("^8.1.6"),
+        "bloc" => Some("^8.1.4"),
+        "get" => Some("^4.6.6"),
+        "provider" => Some("^6.1.2"),
+        // Routing
+        "go_router" => Some("^14.6.2"),
+        "auto_route" => Some("^9.2.2"),
+        // Networking
+        "dio" => Some("^5.7.0"),
+        // Local storage
+        "shared_preferences" => Some("^2.3.3"),
+        "hive" => Some("^2.2.3"),
+        "hive_flutter" => Some("^1.1.0"),
+        "drift" => Some("^2.20.3"),
+        // Code generation
+        "freezed" => Some("^2.5.7"),
+        "freezed_annotation" => Some("^2.4.4"),
+        "json_serializable" => Some("^6.8.0"),
+        "json_annotation" => Some("^4.9.0"),
+        "build_runner" => Some("^2.4.13"),
+        "flutter_gen" => Some("^5.7.0"),
+        // Firebase
+        "firebase_core" => Some("^3.8.1"),
+        "firebase_auth" => Some("^5.3.4"),
+        "cloud_firestore" => Some("^5.5.1"),
+        "firebase_storage" => Some("^12.3.7"),
+        "firebase_messaging" => Some("^15.1.6"),
+        "cloud_functions" => Some("^5.1.5"),
+        // Observability
+        "sentry_flutter" => Some("^8.12.0"),
+        "mixpanel_flutter" => Some("^2.3.3"),
+        // Utilities
+        "equatable" => Some("^2.0.5"),
+        "dartz" => Some("^0.10.1"),
+        "intl" => Some("^0.19.0"),
+        _ => None,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StateManagement {
     Riverpod,
     Bloc,

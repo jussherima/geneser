@@ -13,6 +13,7 @@ pub struct TemplateConfig {
     pub structure: HashMap<String, Vec<String>>,
     pub flags: HashMap<String, bool>,
     pub root_files: Vec<(String, String)>,
+    pub starter_code: bool,
 }
 
 impl TemplateConfig {
@@ -36,6 +37,7 @@ impl TemplateConfig {
             structure,
             flags: HashMap::new(),
             root_files: Vec::new(),
+            starter_code: false,
         }
     }
 
@@ -51,6 +53,11 @@ impl TemplateConfig {
 
     pub fn with_dev_packages(mut self, dev_packages: Vec<String>) -> Self {
         self.dev_packages = dev_packages;
+        self
+    }
+
+    pub fn with_starter_code(mut self, starter_code: bool) -> Self {
+        self.starter_code = starter_code;
         self
     }
 }
