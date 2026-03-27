@@ -172,8 +172,8 @@ pub fn generate(
     Ok(files_created)
 }
 
-/// Generate files for fybego template using the conditional template engine.
-pub fn generate_fybego(
+/// Generate files for CodeWithAndrea template using the conditional template engine.
+pub fn generate_code_with_andrea(
     project_dir: &str,
     project_name: &str,
     structure: &HashMap<String, Vec<String>>,

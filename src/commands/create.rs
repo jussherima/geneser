@@ -1,9 +1,9 @@
 use crate::generators::{files, flutter, pubspec, root_files, structure};
-use crate::models::fybego_options::{FirebaseLevel, FybegoOptions, ObservabilityLevel};
+use crate::models::code_with_andrea_options::{FirebaseLevel, CodeWithAndreaOptions, ObservabilityLevel};
 use crate::models::options::{ExtraPackage, RoutingSolution, StateManagement};
 use crate::templates::custom::CustomTemplate;
 use crate::templates::cwa::CwaTemplate;
-use crate::templates::fybego::FybegoTemplate;
+use crate::templates::code_with_andrea::CodeWithAndreaTemplate;
 use crate::ui::prompts;
 use anyhow::Result;
 use console::style;
@@ -21,11 +21,11 @@ pub fn run(name: Option<String>) -> Result<()> {
     let templates = [
         "CodeWithAndrea (Feature-first)",
         "Custom (Choisir packages)",
-        "Fybego (Production-grade)",
+        "CodeWithAndrea (Medium)",
     ];
     let template_idx = prompts::ask_select("Choisissez un template:", &templates, 0)?;
 
-    let is_fybego = template_idx == 2;
+    let is_code_with_andrea = template_idx == 2;
 
     let config = match template_idx {
         0 => {
@@ -108,7 +108,7 @@ pub fn run(name: Option<String>) -> Result<()> {
             )
         }
         2 => {
-            // Fybego Workflow
+            // CodeWithAndrea Workflow
             let firebase_options = [
                 FirebaseLevel::None,
                 FirebaseLevel::AuthFirestore,
@@ -137,13 +137,13 @@ pub fn run(name: Option<String>) -> Result<()> {
                 .map(|&i| extra_features[i as usize].to_string())
                 .collect();
 
-            let options = FybegoOptions {
+            let options = CodeWithAndreaOptions {
                 firebase: firebase_options[firebase_idx],
                 observability: obs_options[obs_idx],
                 features: selected_features,
             };
 
-            FybegoTemplate::build_config(&project_name, &options)
+            CodeWithAndreaTemplate::build_config(&project_name, &options)
         }
         _ => unreachable!(),
     };
@@ -174,9 +174,9 @@ pub fn run(name: Option<String>) -> Result<()> {
     println!("  {} {} dossiers crees.", style("✓").green(), dirs_created);
 
     // Step 3: Generate files
-    let files_created = if is_fybego {
-        let tmpl_map = FybegoTemplate::templates(&project_name);
-        files::generate_fybego(
+    let files_created = if is_code_with_andrea {
+        let tmpl_map = CodeWithAndreaTemplate::templates(&project_name);
+        files::generate_code_with_andrea(
             &project_name,
             &project_name,
             &config.structure,
@@ -192,8 +192,8 @@ pub fn run(name: Option<String>) -> Result<()> {
         files_created
     );
 
-    // Step 4: Root files (fybego only)
-    if is_fybego && !config.root_files.is_empty() {
+    // Step 4: Root files (code_with_andrea only)
+    if is_code_with_andrea && !config.root_files.is_empty() {
         let mut vars = HashMap::new();
         vars.insert("project_name".to_string(), project_name.clone());
         let root_count =
@@ -207,7 +207,7 @@ pub fn run(name: Option<String>) -> Result<()> {
 
     // Step 5: Update pubspec & get
     pubspec::add_dependencies(&project_name, &config.packages)?;
-    if is_fybego && !config.dev_packages.is_empty() {
+    if is_code_with_andrea && !config.dev_packages.is_empty() {
         pubspec::add_dev_dependencies(&project_name, &config.dev_packages)?;
     }
     flutter::pub_get(&project_name)?;

@@ -35,7 +35,7 @@ impl fmt::Display for ObservabilityLevel {
 }
 
 #[derive(Debug, Clone)]
-pub struct FybegoOptions {
+pub struct CodeWithAndreaOptions {
     pub firebase: FirebaseLevel,
     pub observability: ObservabilityLevel,
     pub features: Vec<String>,

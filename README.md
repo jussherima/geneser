@@ -1,10 +1,23 @@
-# Geneser
+```
+   ██████╗ ███████╗███╗   ██╗███████╗███████╗███████╗██████╗
+  ██╔════╝ ██╔════╝████╗  ██║██╔════╝██╔════╝██╔════╝██╔══██╗
+  ██║  ███╗█████╗  ██╔██╗ ██║█████╗  ███████╗█████╗  ██████╔╝
+  ██║   ██║██╔══╝  ██║╚██╗██║██╔══╝  ╚════██║██╔══╝  ██╔══██╗
+  ╚██████╔╝███████╗██║ ╚████║███████╗███████║███████╗██║  ██║
+   ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
+```
 
-CLI tool to generate Flutter project architectures from famous templates.
+> **Flutter project scaffolding CLI** — Generate production-ready architectures from battle-tested templates.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/geneser.svg)](https://crates.io/crates/geneser)
+[![npm](https://img.shields.io/npm/v/geneser.svg)](https://www.npmjs.com/package/geneser)
+
+---
 
 ## Installation
 
-### Via npm (recommandé)
+### Via npm (recommended)
 
 ```bash
 npm install -g geneser
@@ -16,59 +29,91 @@ npm install -g geneser
 cargo install --path .
 ```
 
+---
+
 ## Usage
 
-### Créer un projet
+### Create a project
 
 ```bash
 geneser create
 ```
 
-Ou avec le nom directement :
+Or with a name directly:
 
 ```bash
-geneser create --name mon_projet
+geneser create --name my_project
 ```
 
-Le CLI te guide ensuite avec des prompts interactifs pour :
-1. Choisir un template
-2. Configurer les options du template
+The CLI guides you with interactive prompts to:
+1. Choose a template
+2. Configure template-specific options
 
-### Lister les templates disponibles
+### List available templates
 
 ```bash
 geneser list
 ```
 
-## Templates disponibles
+---
 
-### CodeWithAndrea (CWA)
+## Templates
 
-Architecture inspirée du cours [CodeWithAndrea](https://www.codewithAndrea.com). Structure feature-first avec :
-- `lib/src/features/` — features organisées par domaine (presentation / application / domain / data)
-- `lib/src/common_widgets/` — widgets réutilisables
-- `lib/src/routing/` — GoRouter
-- `lib/src/constants/`, `exceptions/`, `utils/`, `localization/`
+### CodeWithAndrea — Feature-first
 
-Lors de la création, tu peux définir tes features initiales (ex: `auth`, `home`, `profile`).
+Architecture inspired by [CodeWithAndrea](https://www.codewithAndrea.com). Layered feature-first structure:
 
-## Développement
-
-### Build
-
-```bash
-cargo build --release
+```
+lib/
+├── src/
+│   ├── features/          # Domain-organized features (presentation/application/domain/data)
+│   ├── common_widgets/    # Shared widgets
+│   ├── routing/           # GoRouter setup
+│   ├── constants/
+│   ├── exceptions/
+│   ├── utils/
+│   └── localization/
 ```
 
-### Run en local
+Define your initial features at creation time (e.g. `auth`, `home`, `profile`).
+
+### CodeWithAndrea — Medium
+
+Production-grade structure with optional Firebase and Sentry integration.
+
+```
+lib/
+├── src/
+│   ├── features/
+│   ├── routing/
+│   ├── exceptions/
+│   └── utils/
+```
+
+Configurable at generation:
+- **Firebase** — None / Auth only / Full (Auth + Firestore + Storage)
+- **Observability** — None / Sentry
+
+---
+
+## Development
 
 ```bash
+# Build
+cargo build --release
+
+# Run locally
 cargo run -- create
 cargo run -- list
-```
 
-### Tests
-
-```bash
+# Tests
 cargo test
 ```
+
+---
+
+## License
+
+MIT © [Redsmite](https://github.com/redsmite)
+
+See [LICENSE](./LICENSE) for full terms.

@@ -1,12 +1,12 @@
-use crate::embedded::fybego;
-use crate::models::fybego_options::{FirebaseLevel, FybegoOptions, ObservabilityLevel};
+use crate::embedded::code_with_andrea;
+use crate::models::code_with_andrea_options::{FirebaseLevel, CodeWithAndreaOptions, ObservabilityLevel};
 use crate::models::template_config::TemplateConfig;
 use std::collections::HashMap;
 
-pub struct FybegoTemplate;
+pub struct CodeWithAndreaTemplate;
 
-impl FybegoTemplate {
-    pub fn build_config(project_name: &str, options: &FybegoOptions) -> TemplateConfig {
+impl CodeWithAndreaTemplate {
+    pub fn build_config(project_name: &str, options: &CodeWithAndreaOptions) -> TemplateConfig {
         let mut flags = HashMap::new();
         flags.insert(
             "firebase".to_string(),
@@ -168,22 +168,22 @@ impl FybegoTemplate {
 
         // Root config files
         let root_files = vec![
-            (".fvmrc".to_string(), fybego::FVMRC.to_string()),
+            (".fvmrc".to_string(), code_with_andrea::FVMRC.to_string()),
             (
                 "analysis_options.yaml".to_string(),
-                fybego::ANALYSIS_OPTIONS.to_string(),
+                code_with_andrea::ANALYSIS_OPTIONS.to_string(),
             ),
             (
                 "lefthook.yaml".to_string(),
-                fybego::LEFTHOOK.to_string(),
+                code_with_andrea::LEFTHOOK.to_string(),
             ),
             (
                 "commitlint.config.js".to_string(),
-                fybego::COMMITLINT_CONFIG.to_string(),
+                code_with_andrea::COMMITLINT_CONFIG.to_string(),
             ),
             (
                 "package.json".to_string(),
-                fybego::PACKAGE_JSON.to_string(),
+                code_with_andrea::PACKAGE_JSON.to_string(),
             ),
         ];
 
@@ -192,8 +192,8 @@ impl FybegoTemplate {
             .collect();
 
         TemplateConfig::new(
-            "Fybego",
-            "Production-grade architecture inspired by fybego-standard-app",
+            "CodeWithAndrea",
+            "Production-grade architecture inspired by CodeWithAndrea medium structure",
             all_features,
             "riverpod",
             "go_router",
@@ -205,56 +205,56 @@ impl FybegoTemplate {
         .with_dev_packages(dev_packages)
     }
 
-    /// Returns a map of filename -> template content for the fybego generator.
+    /// Returns a map of filename -> template content for the CodeWithAndrea generator.
     pub fn templates(project_name: &str) -> HashMap<String, &'static str> {
         let mut map = HashMap::new();
-        map.insert("main.dart".to_string(), fybego::MAIN_DART);
+        map.insert("main.dart".to_string(), code_with_andrea::MAIN_DART);
         map.insert(
             format!("{}_app.dart", project_name),
-            fybego::APP_DART,
+            code_with_andrea::APP_DART,
         );
-        map.insert("app_router.dart".to_string(), fybego::APP_ROUTER);
-        map.insert("app_route.dart".to_string(), fybego::APP_ROUTE);
-        map.insert("route_names.dart".to_string(), fybego::ROUTE_NAMES);
-        map.insert("routes.dart".to_string(), fybego::ROUTES);
+        map.insert("app_router.dart".to_string(), code_with_andrea::APP_ROUTER);
+        map.insert("app_route.dart".to_string(), code_with_andrea::APP_ROUTE);
+        map.insert("route_names.dart".to_string(), code_with_andrea::ROUTE_NAMES);
+        map.insert("routes.dart".to_string(), code_with_andrea::ROUTES);
         map.insert(
             "go_router_delegate_listener.dart".to_string(),
-            fybego::GO_ROUTER_DELEGATE_LISTENER,
+            code_with_andrea::GO_ROUTER_DELEGATE_LISTENER,
         );
         map.insert(
             "app_startup_controller.dart".to_string(),
-            fybego::APP_STARTUP_CONTROLLER,
+            code_with_andrea::APP_STARTUP_CONTROLLER,
         );
         map.insert(
             "app_startup_widget_wrapper.dart".to_string(),
-            fybego::APP_STARTUP_WIDGET_WRAPPER,
+            code_with_andrea::APP_STARTUP_WIDGET_WRAPPER,
         );
-        map.insert("app_exception.dart".to_string(), fybego::APP_EXCEPTION);
+        map.insert("app_exception.dart".to_string(), code_with_andrea::APP_EXCEPTION);
         map.insert(
             "app_exception_code.dart".to_string(),
-            fybego::APP_EXCEPTION_CODE,
+            code_with_andrea::APP_EXCEPTION_CODE,
         );
         map.insert(
             "error_placeholder.dart".to_string(),
-            fybego::ERROR_PLACEHOLDER,
+            code_with_andrea::ERROR_PLACEHOLDER,
         );
         map.insert(
             "empty_placeholder.dart".to_string(),
-            fybego::EMPTY_PLACEHOLDER,
+            code_with_andrea::EMPTY_PLACEHOLDER,
         );
-        map.insert("error_logger.dart".to_string(), fybego::ERROR_LOGGER);
-        map.insert("ref_extension.dart".to_string(), fybego::REF_EXTENSION);
+        map.insert("error_logger.dart".to_string(), code_with_andrea::ERROR_LOGGER);
+        map.insert("ref_extension.dart".to_string(), code_with_andrea::REF_EXTENSION);
         map.insert(
             "string_extension.dart".to_string(),
-            fybego::STRING_EXTENSION,
+            code_with_andrea::STRING_EXTENSION,
         );
-        map.insert("app_sizes.dart".to_string(), fybego::APP_SIZES);
+        map.insert("app_sizes.dart".to_string(), code_with_andrea::APP_SIZES);
         map.insert(
             "string_hardcoded.dart".to_string(),
-            fybego::STRING_HARDCODED,
+            code_with_andrea::STRING_HARDCODED,
         );
-        map.insert("home_screen.dart".to_string(), fybego::HOME_SCREEN);
-        map.insert("feature_screen.dart".to_string(), fybego::FEATURE_SCREEN);
+        map.insert("home_screen.dart".to_string(), code_with_andrea::HOME_SCREEN);
+        map.insert("feature_screen.dart".to_string(), code_with_andrea::FEATURE_SCREEN);
         map
     }
 }
