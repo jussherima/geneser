@@ -52,14 +52,6 @@ Architecture inspirée du cours [CodeWithAndrea](https://www.codewithAndrea.com)
 
 Lors de la création, tu peux définir tes features initiales (ex: `auth`, `home`, `profile`).
 
-### Fybego
-
-Template production-grade avec support conditionnel Firebase et Sentry.
-
-Options disponibles :
-- **Firebase** : None / Auth only / Full (Auth + Firestore + Storage)
-- **Observability** : None / Sentry / Sentry + Analytics
-
 ## Développement
 
 ### Build
