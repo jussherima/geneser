@@ -1,0 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class {{feature_name_pascal}}Screen extends ConsumerWidget {
+  const {{feature_name_pascal}}Screen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('{{feature_name_pascal}}'),
+      ),
+      body: const Center(
+        child: Text('{{feature_name_pascal}} screen'),
+      ),
+    );
+  }
+}

@@ -1,0 +1,32 @@
+name: livre
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter_riverpod: any
+  riverpod_annotation: any
+  go_router: any
+  equatable: any
+  freezed_annotation: any
+  json_annotation: any
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  very_good_analysis: any
+  build_runner: any
+  riverpod_generator: any
+  riverpod_lint: any
+  custom_lint: any
+  freezed: any
+  json_serializable: any
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
