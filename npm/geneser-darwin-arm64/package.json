@@ -1,9 +1,13 @@
 {
   "name": "geneser-darwin-arm64",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "geneser binary for macOS arm64",
-  "os": ["darwin"],
-  "cpu": ["arm64"],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

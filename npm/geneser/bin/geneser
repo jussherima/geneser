@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+
+const { execFileSync } = require("child_process");
+const path = require("path");
+
+const platform = process.platform;
+const arch = process.arch;
+
+const PLATFORMS = {
+  "linux-x64":    "geneser-linux-x64",
+  "darwin-x64":   "geneser-darwin-x64",
+  "darwin-arm64": "geneser-darwin-arm64",
+  "win32-x64":    "geneser-windows-x64",
+};
+
+const key = `${platform}-${arch}`;
+const pkgName = PLATFORMS[key];
+
+if (!pkgName) {
+  console.error(`geneser: unsupported platform ${key}`);
+  process.exit(1);
+}
+
+let pkgDir;
+try {
+  pkgDir = path.dirname(require.resolve(`${pkgName}/package.json`));
+} catch (e) {
+  console.error(`geneser: platform package ${pkgName} not found.`);
+  process.exit(1);
+}
+
+const binaryName = platform === "win32" ? "geneser.exe" : "geneser";
+const binary = path.join(pkgDir, binaryName);
+
+try {
+  execFileSync(binary, process.argv.slice(2), { stdio: "inherit" });
+} catch (e) {
+  process.exit(e.status ?? 1);
+}

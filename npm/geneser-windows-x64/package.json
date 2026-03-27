@@ -1,9 +1,13 @@
 {
   "name": "geneser-windows-x64",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "geneser binary for Windows x64",
-  "os": ["win32"],
-  "cpu": ["x64"],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
