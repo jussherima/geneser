@@ -1,13 +1,66 @@
 use crate::generators::{files, flutter, pubspec, root_files, structure};
-use crate::models::code_with_andrea_options::{FirebaseLevel, CodeWithAndreaOptions, ObservabilityLevel};
-use crate::models::options::{ExtraPackage, RoutingSolution, StateManagement};
-use crate::templates::custom::CustomTemplate;
-use crate::templates::cwa::CwaTemplate;
+use crate::models::options::{ExtraPackage, RoutingSolution, StateManagement, VersionStrategy};
+use crate::models::template_config::TemplateConfig;
+use crate::models::template_definition::TemplateDefinition;
+use crate::registry::loader::load_local_templates;
 use crate::templates::code_with_andrea::CodeWithAndreaTemplate;
+use crate::templates::custom::CustomTemplate;
 use crate::ui::prompts;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use console::style;
 use std::collections::HashMap;
+
+/// Embedded official templates: (menu label, JSON source, uses_embedded_dart_files, docs)
+/// `uses_embedded_dart_files` = true uniquement pour CWA Medium dont les .dart sont embarqués.
+pub const OFFICIAL_TEMPLATES: &[(&str, &str, bool, &str)] = &[
+    (
+        "CodeWithAndrea (Feature-first)",
+        include_str!("../config/templates/cwa.json"),
+        false,
+        include_str!("../config/templates/docs/cwa_feature_first.md"),
+    ),
+    (
+        "CodeWithAndrea (Medium)",
+        include_str!("../config/templates/code_with_andrea.json"),
+        true,
+        include_str!("../config/templates/docs/cwa_medium.md"),
+    ),
+    (
+        "Feature-First MVVM + GetX",
+        include_str!("../config/templates/getx_mvvm.json"),
+        false,
+        include_str!("../config/templates/docs/getx_mvvm.md"),
+    ),
+    (
+        "Clean Architecture + BLoC",
+        include_str!("../config/templates/clean_bloc.json"),
+        false,
+        include_str!("../config/templates/docs/clean_bloc.md"),
+    ),
+    (
+        "Riverpod + Freezed (Minimal)",
+        include_str!("../config/templates/riverpod_minimal.json"),
+        false,
+        include_str!("../config/templates/docs/riverpod_minimal.md"),
+    ),
+];
+
+const IDX_CUSTOM: usize = OFFICIAL_TEMPLATES.len();
+
+fn validate_project_name(name: &str) -> Result<()> {
+    if name.is_empty() || name.len() > 128 {
+        anyhow::bail!("Le nom du projet doit contenir entre 1 et 128 caractères.");
+    }
+    if !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        anyhow::bail!(
+            "Le nom du projet ne peut contenir que des lettres, chiffres et underscores (a-z, 0-9, _)."
+        );
+    }
+    if name.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+        anyhow::bail!("Le nom du projet ne peut pas commencer par un chiffre.");
+    }
+    Ok(())
+}
 
 pub fn run(name: Option<String>) -> Result<()> {
     println!("\n  {}", style("Geneser CLI").bold().cyan());
@@ -17,164 +70,74 @@ pub fn run(name: Option<String>) -> Result<()> {
         Some(n) => n,
         None => prompts::ask_input("Nom du projet", Some("my_app"))?,
     };
+    validate_project_name(&project_name)?;
 
-    let templates = [
-        "CodeWithAndrea (Feature-first)",
-        "Custom (Choisir packages)",
-        "CodeWithAndrea (Medium)",
-    ];
-    let template_idx = prompts::ask_select("Choisissez un template:", &templates, 0)?;
+    // Build template menu
+    let local_templates = load_local_templates();
+    let mut menu: Vec<String> = OFFICIAL_TEMPLATES
+        .iter()
+        .map(|(label, _, _, _)| label.to_string())
+        .collect();
+    menu.push("Custom (Choisir packages)".to_string());
+    for lt in &local_templates {
+        menu.push(format!("{} [communautaire]", lt.definition.name));
+    }
 
-    let is_code_with_andrea = template_idx == 2;
+    let menu_refs: Vec<&str> = menu.iter().map(|s| s.as_str()).collect();
+    let template_idx = prompts::ask_select("Choisissez un template:", &menu_refs, 0)?;
 
-    let config = match template_idx {
-        0 => {
-            // CWA Workflow
-            let features = vec![
-                "authentication",
-                "home",
-                "products",
-                "cart",
-                "orders",
-                "reviews",
-            ];
-            let defaults = vec![true, true, false, false, false, false];
-            let selected_indices = prompts::ask_multiselect(
-                "Quelles features voulez-vous generer ?",
-                &features,
-                &defaults,
-            )?;
-            let selected_features: Vec<String> = selected_indices
-                .iter()
-                .map(|&i| features[i as usize].to_string())
-                .collect();
-            CwaTemplate::build_config(&project_name, selected_features)
-        }
-        1 => {
-            // Custom Workflow
-            let state_options = [
-                StateManagement::Riverpod,
-                StateManagement::Bloc,
-                StateManagement::GetX,
-                StateManagement::Provider,
-            ];
-            let state_idx = prompts::ask_select("State Management:", &state_options, 0)?;
-            let state_management = state_options[state_idx];
-
-            let routing_options = [
-                RoutingSolution::GoRouter,
-                RoutingSolution::AutoRoute,
-                RoutingSolution::GetXRouting,
-                RoutingSolution::Navigator2,
-            ];
-            let routing_idx = prompts::ask_select("Routing:", &routing_options, 0)?;
-            let routing = routing_options[routing_idx];
-
-            let extra_options = [
-                ExtraPackage::Drift,
-                ExtraPackage::Dio,
-                ExtraPackage::Freezed,
-                ExtraPackage::FlutterGen,
-                ExtraPackage::Hive,
-                ExtraPackage::SharedPreferences,
-                ExtraPackage::Firebase,
-                ExtraPackage::Equatable,
-                ExtraPackage::Dartz,
-                ExtraPackage::Intl,
-            ];
-            let defaults = vec![false; extra_options.len()];
-            let selected_extra_indices =
-                prompts::ask_multiselect("Packages additionnels:", &extra_options, &defaults)?;
-            let extras: Vec<ExtraPackage> = selected_extra_indices
-                .iter()
-                .map(|&i| extra_options[i])
-                .collect();
-
-            let basic_features = vec!["authentication", "home"];
-            let feature_defaults = vec![true, true];
-            let selected_feature_indices =
-                prompts::ask_multiselect("Features de base:", &basic_features, &feature_defaults)?;
-            let selected_features: Vec<String> = selected_feature_indices
-                .iter()
-                .map(|&i| basic_features[i as usize].to_string())
-                .collect();
-
-            CustomTemplate::build_config(
-                &project_name,
-                selected_features,
-                state_management,
-                routing,
-                extras,
-            )
-        }
-        2 => {
-            // CodeWithAndrea Workflow
-            let firebase_options = [
-                FirebaseLevel::None,
-                FirebaseLevel::AuthFirestore,
-                FirebaseLevel::Full,
-            ];
-            let firebase_idx =
-                prompts::ask_select("Firebase:", &firebase_options, 0)?;
-
-            let obs_options = [
-                ObservabilityLevel::None,
-                ObservabilityLevel::Sentry,
-                ObservabilityLevel::SentryAnalytics,
-            ];
-            let obs_idx =
-                prompts::ask_select("Observabilite:", &obs_options, 0)?;
-
-            let extra_features = vec!["profile", "settings", "notifications"];
-            let feature_defaults = vec![false, false, false];
-            let selected_feature_indices = prompts::ask_multiselect(
-                "Features additionnelles (home toujours inclus):",
-                &extra_features,
-                &feature_defaults,
-            )?;
-            let selected_features: Vec<String> = selected_feature_indices
-                .iter()
-                .map(|&i| extra_features[i as usize].to_string())
-                .collect();
-
-            let options = CodeWithAndreaOptions {
-                firebase: firebase_options[firebase_idx],
-                observability: obs_options[obs_idx],
-                features: selected_features,
-            };
-
-            CodeWithAndreaTemplate::build_config(&project_name, &options)
-        }
-        _ => unreachable!(),
+    let config = if template_idx < OFFICIAL_TEMPLATES.len() {
+        let (_, json_src, _, _) = OFFICIAL_TEMPLATES[template_idx];
+        let def: TemplateDefinition = serde_json::from_str(json_src)
+            .with_context(|| "JSON template invalide — ceci est un bug dans geneser")?;
+        run_json_template(&project_name, &def)?
+    } else if template_idx == IDX_CUSTOM {
+        run_custom_template(&project_name)?
+    } else {
+        let lt = &local_templates[template_idx - IDX_CUSTOM - 1];
+        run_json_template(&project_name, &lt.definition)?
     };
 
+    let uses_dart_templates = template_idx < OFFICIAL_TEMPLATES.len()
+        && OFFICIAL_TEMPLATES[template_idx].2;  // index 2 = uses_embedded_dart_files
+
+    let version_options = [VersionStrategy::Stable, VersionStrategy::Latest];
+    let version_idx = prompts::ask_select("Versions des packages:", &version_options, 0)?;
+    let version_strategy = version_options[version_idx];
+
+    let starter_code =
+        prompts::ask_confirm("Generer le boilerplate de démarrage (main.dart, screens, repos) ?", true)?;
+
     println!("\n{}", style("Recapitulatif :").bold());
-    println!(" - Projet : {}", style(&project_name).green());
+    println!(" - Projet   : {}", style(&project_name).green());
     println!(" - Template : {}", style(&config.name).green());
     println!(
         " - Features : {}",
         style(config.features.join(", ")).green()
     );
+    println!(" - Versions : {}", style(&version_strategy).green());
+    println!(
+        " - Starter  : {}",
+        style(if starter_code { "Boilerplate complet" } else { "Stubs vides" }).green()
+    );
 
     let confirm = prompts::ask_confirm("Generer ce projet maintenant ?", true)?;
-
     if !confirm {
         println!("{}", style("Operation annulee.").red());
         return Ok(());
     }
-
     println!();
 
-    // Step 1: flutter create
+    // 1. flutter create
     flutter::create_project(&project_name)?;
     println!("  {} Projet de base cree.", style("✓").green());
 
-    // Step 2: Generate structure
+    // 2. Directories
     let dirs_created = structure::generate(&project_name, &config.structure)?;
     println!("  {} {} dossiers crees.", style("✓").green(), dirs_created);
 
-    // Step 3: Generate files
-    let files_created = if is_code_with_andrea {
+    // 3. Files
+    let files_created = if uses_dart_templates {
         let tmpl_map = CodeWithAndreaTemplate::templates(&project_name);
         files::generate_code_with_andrea(
             &project_name,
@@ -184,16 +147,18 @@ pub fn run(name: Option<String>) -> Result<()> {
             &tmpl_map,
         )?
     } else {
-        files::generate(&project_name, &project_name, &config.structure)?
+        files::generate(
+            &project_name,
+            &project_name,
+            &config.structure,
+            &config.state_management,
+            starter_code,
+        )?
     };
-    println!(
-        "  {} {} fichiers generes.",
-        style("✓").green(),
-        files_created
-    );
+    println!("  {} {} fichiers generes.", style("✓").green(), files_created);
 
-    // Step 4: Root files (code_with_andrea only)
-    if is_code_with_andrea && !config.root_files.is_empty() {
+    // 4. Root config files (CWA Medium uniquement)
+    if uses_dart_templates && !config.root_files.is_empty() {
         let mut vars = HashMap::new();
         vars.insert("project_name".to_string(), project_name.clone());
         let root_count =
@@ -205,10 +170,10 @@ pub fn run(name: Option<String>) -> Result<()> {
         );
     }
 
-    // Step 5: Update pubspec & get
-    pubspec::add_dependencies(&project_name, &config.packages)?;
-    if is_code_with_andrea && !config.dev_packages.is_empty() {
-        pubspec::add_dev_dependencies(&project_name, &config.dev_packages)?;
+    // 5. Pubspec
+    pubspec::add_dependencies(&project_name, &config.packages, &version_strategy)?;
+    if !config.dev_packages.is_empty() {
+        pubspec::add_dev_dependencies(&project_name, &config.dev_packages, &version_strategy)?;
     }
     flutter::pub_get(&project_name)?;
     println!(
@@ -223,6 +188,112 @@ pub fn run(name: Option<String>) -> Result<()> {
         style(format!("Projet {} pret.", project_name)).bold()
     );
     println!("  cd {}", project_name);
-
     Ok(())
+}
+
+/// Flux interactif entièrement piloté par un `TemplateDefinition` JSON.
+/// Utilisé pour tous les templates officiels et communautaires.
+fn run_json_template(project_name: &str, def: &TemplateDefinition) -> Result<TemplateConfig> {
+    let mut vars: HashMap<String, String> = HashMap::new();
+    let mut feature_list: Vec<String> = Vec::new();
+
+    for prompt in &def.prompts {
+        match prompt.prompt_type.as_str() {
+            "select" => {
+                let opts: Vec<&str> = prompt.options.iter().map(|s| s.as_str()).collect();
+                let idx = prompts::ask_select(&prompt.label, &opts, 0)?;
+                vars.insert(prompt.id.clone(), prompt.options[idx].clone());
+            }
+            "multiselect" => {
+                let opts: Vec<&str> = prompt.options.iter().map(|s| s.as_str()).collect();
+                let defaults = vec![false; prompt.options.len()];
+                let selected = prompts::ask_multiselect(&prompt.label, &opts, &defaults)?;
+                let values: Vec<String> =
+                    selected.iter().map(|&i| prompt.options[i].clone()).collect();
+                if prompt.id == "features" {
+                    feature_list = values.clone();
+                }
+                vars.insert(prompt.id.clone(), values.join(","));
+            }
+            _ => {}
+        }
+    }
+
+    // CWA Medium : "home" toujours présent
+    if def.name.contains("Medium") && !feature_list.contains(&"home".to_string()) {
+        feature_list.insert(0, "home".to_string());
+    }
+
+    let flags = def.evaluate_flags(&vars);
+    let packages = def.resolve_packages(&flags);
+    let dev_packages = def.resolve_dev_packages(&flags);
+    let mut structure = def.resolve_structure(&flags, project_name);
+
+    // Expansion du feature_template JSON pour chaque feature sélectionnée
+    def.resolve_features(&feature_list, &mut structure);
+
+    Ok(TemplateConfig::new(
+        &def.name,
+        &def.description,
+        feature_list,
+        &def.state_management,
+        &def.routing,
+        packages,
+        structure,
+    )
+    .with_flags(flags)
+    .with_dev_packages(dev_packages))
+}
+
+/// Template custom : choix libre du state management, routing et packages.
+fn run_custom_template(project_name: &str) -> Result<TemplateConfig> {
+    let state_options = [
+        StateManagement::Riverpod,
+        StateManagement::Bloc,
+        StateManagement::GetX,
+        StateManagement::Provider,
+    ];
+    let state_idx = prompts::ask_select("State Management:", &state_options, 0)?;
+
+    let routing_options = [
+        RoutingSolution::GoRouter,
+        RoutingSolution::AutoRoute,
+        RoutingSolution::GetXRouting,
+        RoutingSolution::Navigator2,
+    ];
+    let routing_idx = prompts::ask_select("Routing:", &routing_options, 0)?;
+
+    let extra_options = [
+        ExtraPackage::Drift,
+        ExtraPackage::Dio,
+        ExtraPackage::Freezed,
+        ExtraPackage::FlutterGen,
+        ExtraPackage::Hive,
+        ExtraPackage::SharedPreferences,
+        ExtraPackage::Firebase,
+        ExtraPackage::Equatable,
+        ExtraPackage::Dartz,
+        ExtraPackage::Intl,
+    ];
+    let defaults = vec![false; extra_options.len()];
+    let selected_extra =
+        prompts::ask_multiselect("Packages additionnels:", &extra_options, &defaults)?;
+    let extras: Vec<ExtraPackage> = selected_extra.iter().map(|&i| extra_options[i]).collect();
+
+    let basic_features = vec!["authentication", "home"];
+    let feature_defaults = vec![true, true];
+    let selected_feat =
+        prompts::ask_multiselect("Features de base:", &basic_features, &feature_defaults)?;
+    let features: Vec<String> = selected_feat
+        .iter()
+        .map(|&i| basic_features[i].to_string())
+        .collect();
+
+    Ok(CustomTemplate::build_config(
+        project_name,
+        features,
+        state_options[state_idx],
+        routing_options[routing_idx],
+        extras,
+    ))
 }

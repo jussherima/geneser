@@ -22,4 +22,32 @@ pub enum Commands {
     },
     /// List all available templates
     List,
+    /// Manage community templates
+    Template {
+        #[command(subcommand)]
+        action: TemplateCommands,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum TemplateCommands {
+    /// Install a community template (e.g. github:user/repo)
+    Add {
+        /// Source in the form github:user/repo
+        source: String,
+    },
+    /// List installed community templates
+    List,
+    /// Remove an installed community template
+    Remove {
+        /// Template name (folder name in ~/.config/geneser/templates/)
+        name: String,
+    },
+    /// Update all installed community templates
+    Update,
+    /// Show the architecture documentation of a community template
+    Docs {
+        /// Template name (as shown in `geneser template list`)
+        name: String,
+    },
 }

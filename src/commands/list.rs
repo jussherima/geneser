@@ -2,16 +2,50 @@ use anyhow::Result;
 use console::style;
 
 pub fn run() -> Result<()> {
-    println!("\n  {}", style("Templates disponibles :").bold().cyan());
+    println!("\n  {}", style("Templates officiels :").bold().cyan());
 
-    println!("  - {}", style("CodeWithAndrea").green().bold());
-    println!("    Architecture Feature-first avec Riverpod et GoRouter.");
+    let templates = [
+        (
+            "CodeWithAndrea (Feature-first)",
+            "riverpod / go_router",
+            "Feature-first avec Riverpod, GoRouter et codegen Freezed.",
+        ),
+        (
+            "CodeWithAndrea (Medium)",
+            "riverpod / go_router",
+            "Production-grade avec Firebase et Sentry optionnels, root config embarquee.",
+        ),
+        (
+            "Feature-First MVVM + GetX",
+            "getx / getx",
+            "MVVM avec GetX (state + routing), stockage et HTTP configurables.",
+        ),
+        (
+            "Clean Architecture + BLoC",
+            "bloc / go_router",
+            "Clean Archi (data/domain/presentation) avec BLoC, get_it/injectable, Drift/Hive.",
+        ),
+        (
+            "Riverpod + Freezed (Minimal)",
+            "riverpod / go_router",
+            "Structure minimaliste Feature-First avec Riverpod, Freezed et go_router.",
+        ),
+        (
+            "Custom",
+            "au choix",
+            "Selection manuelle du State Management, Routing et packages additionnels.",
+        ),
+    ];
 
-    println!("  - {}", style("Custom").green().bold());
-    println!("    Selection manuelle du State Management et Routing.");
+    for (name, stack, desc) in &templates {
+        println!();
+        println!("  {} {}", style("•").cyan(), style(name).green().bold());
+        println!("    Stack  : {}", style(stack).dim());
+        println!("    {}",  desc);
+    }
 
-    println!("  - {}", style("CodeWithAndrea").green().bold());
-    println!("    Production-grade avec Riverpod, GoRouter, Firebase et Sentry optionnels.");
+    println!("\n  {} Pour les templates communautaires :", style("i").dim());
+    println!("    geneser template list");
 
     println!();
     Ok(())
