@@ -114,6 +114,6 @@ cargo test
 
 ## License
 
-MIT © [Redsmite](https://github.com/redsmite)
+MIT
 
 See [LICENSE](./LICENSE) for full terms.
