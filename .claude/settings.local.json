@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(node:*)",
+      "Bash(gh run:*)",
+      "Bash(npm view geneser versions 2>/dev/null && npm view geneser-darwin-arm64 versions 2>/dev/null)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cargo check:*)",
+      "Bash(~/.cargo/bin/cargo check:*)",
+      "Bash(echo cargo not in PATH:*)",
+      "Bash(cargo build:*)",
+      "Bash(~/.cargo/bin/cargo build:*)",
+      "Bash(grep:*)",
+      "Bash(export PATH=\"$HOME/.cargo/bin:$PATH\" && cargo build 2>&1)",
+      "Bash(uname:*)",
+      "Bash(git config:*)",
+      "Bash(sysctl -n hw.memsize)",
+      "Bash(system_profiler SPHardwareDataType:*)",
+      "Bash(claude:*)",
+      "Bash(code:*)",
+      "Bash(git:*)",
+      "Bash(git diff:*)",
+      "Bash(echo:*)",
+      "WebSearch",
+      "WebFetch(domain:codingcatlady.net)",
+      "WebFetch(domain:copyprogramming.com)",
+      "WebFetch(domain:aminul.net)",
+      "WebFetch(domain:www.dbsysnet.com)",
+      "WebFetch(domain:forums.macrumors.com)",
+      "WebFetch(domain:tinyapps.org)",
+      "WebFetch(domain:www.reddit.com)",
+      "Bash(find:*)",
+      "Bash(echo Exit: $?:*)",
+      "Bash(printf:*)"
+    ]
+  }
+}
