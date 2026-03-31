@@ -8,6 +8,7 @@ use crate::templates::josoa::JosoaTemplate;
 use crate::templates::custom::CustomTemplate;
 use crate::ui::prompts;
 use anyhow::{Context, Result};
+use crate::generators::flutter::FlutterRunner;
 use console::style;
 use std::collections::HashMap;
 
@@ -79,6 +80,64 @@ pub fn run(name: Option<String>) -> Result<()> {
     };
     validate_project_name(&project_name)?;
 
+    // Detect Flutter runner (FVM or direct)
+    let runner = flutter::detect_flutter_runner();
+    let mut fvm_version: Option<String> = None;
+
+    match &runner {
+        FlutterRunner::None => {
+            anyhow::bail!(
+                "Flutter introuvable. Installez Flutter (https://flutter.dev) ou FVM (https://fvm.app)."
+            );
+        }
+        FlutterRunner::Fvm => {
+            println!("  {} FVM detecte.", style("✓").green());
+            let local_versions = flutter::fvm_list_local()?;
+
+            let chosen = if local_versions.is_empty() {
+                // No local versions — go straight to remote install
+                println!("  {} Aucune version Flutter installee localement.", style("!").yellow());
+                let remote = flutter::fvm_list_versions()?;
+                if remote.is_empty() {
+                    anyhow::bail!("Impossible de lister les versions Flutter via FVM.");
+                }
+                let remote_refs: Vec<&str> = remote.iter().map(|s| s.as_str()).collect();
+                let ridx = prompts::ask_select("Version a installer:", &remote_refs, 0)?;
+                let ver = remote[ridx].clone();
+                flutter::fvm_install(&ver)?;
+                ver
+            } else {
+                // Show local versions + option to install a new one
+                let mut menu: Vec<String> = local_versions.clone();
+                let install_idx = menu.len();
+                menu.push("Installer une autre version...".to_string());
+
+                let menu_refs: Vec<&str> = menu.iter().map(|s| s.as_str()).collect();
+                let idx = prompts::ask_select("Version Flutter (FVM):", &menu_refs, 0)?;
+
+                if idx == install_idx {
+                    let remote = flutter::fvm_list_versions()?;
+                    if remote.is_empty() {
+                        anyhow::bail!("Impossible de lister les versions Flutter via FVM.");
+                    }
+                    let remote_refs: Vec<&str> = remote.iter().map(|s| s.as_str()).collect();
+                    let ridx = prompts::ask_select("Version a installer:", &remote_refs, 0)?;
+                    let ver = remote[ridx].clone();
+                    flutter::fvm_install(&ver)?;
+                    ver
+                } else {
+                    local_versions[idx].clone()
+                }
+            };
+
+            println!("  {} Flutter {} pret.", style("✓").green(), &chosen);
+            fvm_version = Some(chosen);
+        }
+        FlutterRunner::Flutter => {
+            println!("  {} Flutter detecte.", style("✓").green());
+        }
+    }
+
     // Build template menu
     let local_templates = load_local_templates();
     let mut menu: Vec<String> = OFFICIAL_TEMPLATES
@@ -136,8 +195,13 @@ pub fn run(name: Option<String>) -> Result<()> {
     println!();
 
     // 1. flutter create
-    flutter::create_project(&project_name)?;
+    flutter::create_project(&project_name, &runner)?;
     println!("  {} Projet de base cree.", style("✓").green());
+
+    // Pin FVM version if applicable
+    if let Some(ref ver) = fvm_version {
+        flutter::fvm_use(ver, &project_name)?;
+    }
 
     // 2. Directories
     let dirs_created = structure::generate(&project_name, &config.structure)?;
@@ -197,7 +261,7 @@ pub fn run(name: Option<String>) -> Result<()> {
     if !config.dev_packages.is_empty() {
         pubspec::add_dev_dependencies(&project_name, &config.dev_packages, &version_strategy)?;
     }
-    flutter::pub_get(&project_name)?;
+    flutter::pub_get(&project_name, &runner)?;
     println!(
         "  {} {} packages ajoutes.",
         style("✓").green(),
