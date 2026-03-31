@@ -24,10 +24,13 @@ pub fn detect_flutter_runner() -> FlutterRunner {
 }
 
 fn is_command_available(cmd: &str) -> bool {
-    Command::new("which")
-        .arg(cmd)
-        .output()
-        .map(|o| o.status.success())
+    // Try running the command directly — most reliable cross-platform check
+    Command::new(cmd)
+        .arg("--version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
         .unwrap_or(false)
 }
 
