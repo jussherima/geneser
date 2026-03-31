@@ -11,24 +11,24 @@ pub enum FlutterRunner {
 }
 
 /// Detect whether `fvm` or `flutter` is available in PATH.
+/// FVM is always preferred when present — even if `flutter` is also in PATH,
+/// it may be a shim that fails in non-interactive subprocesses.
 pub fn detect_flutter_runner() -> FlutterRunner {
-    if Command::new("fvm")
-        .arg("--version")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
-    {
+    if is_command_available("fvm") {
         return FlutterRunner::Fvm;
     }
-    if Command::new("flutter")
-        .arg("--version")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
-    {
+    if is_command_available("flutter") {
         return FlutterRunner::Flutter;
     }
     FlutterRunner::None
+}
+
+fn is_command_available(cmd: &str) -> bool {
+    Command::new("which")
+        .arg(cmd)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
 }
 
 /// Parse `fvm releases` to list stable Flutter versions.
@@ -187,27 +187,24 @@ pub fn create_project(name: &str, runner: &FlutterRunner) -> Result<()> {
     pb.set_message(format!("Running flutter create {}...", name));
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let status = match runner {
-        FlutterRunner::Fvm => Command::new("fvm")
-            .arg("flutter")
-            .arg("create")
-            .arg(name)
-            .arg("--empty")
-            .output()
-            .context("Failed to execute fvm flutter create")?,
-        _ => Command::new("flutter")
-            .arg("create")
-            .arg(name)
-            .arg("--empty")
-            .output()
-            .context("Failed to execute flutter create. Is Flutter in your PATH?")?,
+    let (cmd, args) = match runner {
+        FlutterRunner::Fvm => ("fvm", vec!["flutter", "create", name, "--empty"]),
+        FlutterRunner::Flutter => ("flutter", vec!["create", name, "--empty"]),
+        FlutterRunner::None => anyhow::bail!(
+            "Flutter introuvable. Installez Flutter ou FVM."
+        ),
     };
+
+    let status = Command::new(cmd)
+        .args(&args)
+        .output()
+        .with_context(|| format!("Impossible de lancer '{}'. Verifiez votre PATH.", cmd))?;
 
     pb.finish_and_clear();
 
     if !status.status.success() {
         let stderr = String::from_utf8_lossy(&status.stderr);
-        anyhow::bail!("flutter create failed: {}", stderr);
+        anyhow::bail!("{} create failed: {}", cmd, stderr);
     }
 
     Ok(())
@@ -218,27 +215,25 @@ pub fn pub_get(project_dir: &str, runner: &FlutterRunner) -> Result<()> {
     pb.set_message("Running flutter pub get...");
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
-    let status = match runner {
-        FlutterRunner::Fvm => Command::new("fvm")
-            .current_dir(project_dir)
-            .arg("flutter")
-            .arg("pub")
-            .arg("get")
-            .output()
-            .context("Failed to execute fvm flutter pub get")?,
-        _ => Command::new("flutter")
-            .current_dir(project_dir)
-            .arg("pub")
-            .arg("get")
-            .output()
-            .context("Failed to execute flutter pub get")?,
+    let (cmd, args) = match runner {
+        FlutterRunner::Fvm => ("fvm", vec!["flutter", "pub", "get"]),
+        FlutterRunner::Flutter => ("flutter", vec!["pub", "get"]),
+        FlutterRunner::None => anyhow::bail!(
+            "Flutter introuvable. Installez Flutter ou FVM."
+        ),
     };
+
+    let status = Command::new(cmd)
+        .current_dir(project_dir)
+        .args(&args)
+        .output()
+        .with_context(|| format!("Impossible de lancer '{}'. Verifiez votre PATH.", cmd))?;
 
     pb.finish_and_clear();
 
     if !status.status.success() {
         let stderr = String::from_utf8_lossy(&status.stderr);
-        anyhow::bail!("flutter pub get failed: {}", stderr);
+        anyhow::bail!("{} pub get failed: {}", cmd, stderr);
     }
 
     Ok(())
