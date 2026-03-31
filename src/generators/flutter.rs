@@ -13,6 +13,7 @@ pub enum FlutterRunner {
 /// Detect whether `fvm` or `flutter` is available in PATH.
 /// FVM is always preferred when present — even if `flutter` is also in PATH,
 /// it may be a shim that fails in non-interactive subprocesses.
+#[allow(dead_code)]
 pub fn detect_flutter_runner() -> FlutterRunner {
     if is_command_available("fvm") {
         return FlutterRunner::Fvm;
@@ -21,6 +22,11 @@ pub fn detect_flutter_runner() -> FlutterRunner {
         return FlutterRunner::Flutter;
     }
     FlutterRunner::None
+}
+
+/// Returns (fvm_available, flutter_available).
+pub fn detect_available_runners() -> (bool, bool) {
+    (is_command_available("fvm"), is_command_available("flutter"))
 }
 
 fn is_command_available(cmd: &str) -> bool {
@@ -199,6 +205,37 @@ pub fn create_project(name: &str, runner: &FlutterRunner) -> Result<()> {
     };
 
     let status = Command::new(cmd)
+        .args(&args)
+        .output()
+        .with_context(|| format!("Impossible de lancer '{}'. Verifiez votre PATH.", cmd))?;
+
+    pb.finish_and_clear();
+
+    if !status.status.success() {
+        let stderr = String::from_utf8_lossy(&status.stderr);
+        anyhow::bail!("{} create failed: {}", cmd, stderr);
+    }
+
+    Ok(())
+}
+
+/// Create a Flutter project inside an existing directory using `flutter create .`
+/// Used when FVM is active so that `fvm use` runs first to pin the version.
+pub fn create_project_in_dir(project_dir: &str, runner: &FlutterRunner) -> Result<()> {
+    let pb = make_spinner();
+    pb.set_message(format!("Running flutter create in {}...", project_dir));
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+
+    let (cmd, args) = match runner {
+        FlutterRunner::Fvm => ("fvm", vec!["flutter", "create", ".", "--empty"]),
+        FlutterRunner::Flutter => ("flutter", vec!["create", ".", "--empty"]),
+        FlutterRunner::None => anyhow::bail!(
+            "Flutter introuvable. Installez Flutter ou FVM."
+        ),
+    };
+
+    let status = Command::new(cmd)
+        .current_dir(project_dir)
         .args(&args)
         .output()
         .with_context(|| format!("Impossible de lancer '{}'. Verifiez votre PATH.", cmd))?;

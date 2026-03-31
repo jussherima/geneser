@@ -80,22 +80,35 @@ pub fn run(name: Option<String>) -> Result<()> {
     };
     validate_project_name(&project_name)?;
 
-    // Detect Flutter runner (FVM or direct)
-    let runner = flutter::detect_flutter_runner();
+    // Detect available Flutter runners
+    let (has_fvm, has_flutter) = flutter::detect_available_runners();
     let mut fvm_version: Option<String> = None;
 
-    match &runner {
-        FlutterRunner::None => {
-            anyhow::bail!(
-                "Flutter introuvable. Installez Flutter (https://flutter.dev) ou FVM (https://fvm.app)."
-            );
+    let runner = if !has_fvm && !has_flutter {
+        anyhow::bail!(
+            "Flutter introuvable. Installez Flutter (https://flutter.dev) ou FVM (https://fvm.app)."
+        );
+    } else if has_fvm && has_flutter {
+        // Both available — let user choose
+        let choices = ["FVM (gestion de versions)", "Flutter systeme (direct)"];
+        let choice = prompts::ask_select("Comment utiliser Flutter ?", &choices, 0)?;
+        if choice == 0 {
+            FlutterRunner::Fvm
+        } else {
+            FlutterRunner::Flutter
         }
+    } else if has_fvm {
+        FlutterRunner::Fvm
+    } else {
+        FlutterRunner::Flutter
+    };
+
+    match &runner {
         FlutterRunner::Fvm => {
             println!("  {} FVM detecte.", style("✓").green());
             let local_versions = flutter::fvm_list_local()?;
 
             let chosen = if local_versions.is_empty() {
-                // No local versions — go straight to remote install
                 println!("  {} Aucune version Flutter installee localement.", style("!").yellow());
                 let remote = flutter::fvm_list_versions()?;
                 if remote.is_empty() {
@@ -107,7 +120,6 @@ pub fn run(name: Option<String>) -> Result<()> {
                 flutter::fvm_install(&ver)?;
                 ver
             } else {
-                // Show local versions + option to install a new one
                 let mut menu: Vec<String> = local_versions.clone();
                 let install_idx = menu.len();
                 menu.push("Installer une autre version...".to_string());
@@ -136,6 +148,7 @@ pub fn run(name: Option<String>) -> Result<()> {
         FlutterRunner::Flutter => {
             println!("  {} Flutter detecte.", style("✓").green());
         }
+        FlutterRunner::None => unreachable!(),
     }
 
     // Build template menu
@@ -194,14 +207,16 @@ pub fn run(name: Option<String>) -> Result<()> {
     }
     println!();
 
-    // 1. flutter create
-    flutter::create_project(&project_name, &runner)?;
-    println!("  {} Projet de base cree.", style("✓").green());
-
-    // Pin FVM version if applicable
+    // 1. flutter create (with FVM: mkdir → fvm use → flutter create . to avoid version mismatch)
     if let Some(ref ver) = fvm_version {
+        std::fs::create_dir_all(&project_name)
+            .with_context(|| format!("Impossible de creer le dossier '{}'", project_name))?;
         flutter::fvm_use(ver, &project_name)?;
+        flutter::create_project_in_dir(&project_name, &runner)?;
+    } else {
+        flutter::create_project(&project_name, &runner)?;
     }
+    println!("  {} Projet de base cree.", style("✓").green());
 
     // 2. Directories
     let dirs_created = structure::generate(&project_name, &config.structure)?;
@@ -237,6 +252,13 @@ pub fn run(name: Option<String>) -> Result<()> {
         let root_file_pairs: Vec<(String, String)> = def
             .root_files
             .iter()
+            .filter(|name| {
+                // Skip .fvmrc when not using FVM (Flutter system mode)
+                if name.as_str() == ".fvmrc" && fvm_version.is_none() {
+                    return false;
+                }
+                true
+            })
             .filter_map(|name| {
                 root_tmpl_map
                     .get(name.as_str())
@@ -246,6 +268,9 @@ pub fn run(name: Option<String>) -> Result<()> {
         if !root_file_pairs.is_empty() {
             let mut vars = HashMap::new();
             vars.insert("project_name".to_string(), project_name.clone());
+            if let Some(ref ver) = fvm_version {
+                vars.insert("flutter_version".to_string(), ver.clone());
+            }
             let root_count =
                 root_files::generate(&project_name, &root_file_pairs, &vars, &config.flags)?;
             println!(
