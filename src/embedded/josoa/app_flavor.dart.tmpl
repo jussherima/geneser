@@ -1,0 +1,26 @@
+enum AppFlavor {
+  dev(
+    packageName: 'com.example.{{project_name}}.dev',
+    appName: '{{project_name_pascal}} Dev',
+  ),
+  stg(
+    packageName: 'com.example.{{project_name}}.stg',
+    appName: '{{project_name_pascal}} Stg',
+  ),
+  prod(
+    packageName: 'com.example.{{project_name}}',
+    appName: '{{project_name_pascal}}',
+  );
+
+  const AppFlavor({
+    required this.packageName,
+    required this.appName,
+  });
+
+  final String packageName;
+  final String appName;
+
+  bool get isDev => this == AppFlavor.dev;
+  bool get isStg => this == AppFlavor.stg;
+  bool get isProd => this == AppFlavor.prod;
+}

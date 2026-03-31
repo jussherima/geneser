@@ -1,0 +1,127 @@
+{
+  "name": "Josoa",
+  "description": "Production-grade architecture — Riverpod, GoRouter, Firebase, multi-flavor, Sentry",
+  "state_management": "riverpod",
+  "routing": "go_router",
+  "prompts": [
+    {
+      "id": "firebase",
+      "label": "Firebase",
+      "type": "select",
+      "options": ["none", "auth_firestore", "full"]
+    },
+    {
+      "id": "observability",
+      "label": "Observabilite",
+      "type": "select",
+      "options": ["none", "sentry", "sentry_analytics"]
+    },
+    {
+      "id": "payment",
+      "label": "Payment",
+      "type": "select",
+      "options": ["none", "stripe"]
+    },
+    {
+      "id": "localization",
+      "label": "Localization",
+      "type": "select",
+      "options": ["none", "intl"]
+    },
+    {
+      "id": "features",
+      "label": "Features additionnelles (home toujours inclus)",
+      "type": "multiselect",
+      "options": ["profile", "settings", "notifications", "authentication"]
+    }
+  ],
+  "packages": {
+    "base": [
+      "flutter_riverpod",
+      "riverpod_annotation",
+      "go_router",
+      "equatable",
+      "freezed_annotation",
+      "json_annotation"
+    ],
+    "conditional": {
+      "firebase_auth": ["firebase_core", "firebase_auth", "cloud_firestore"],
+      "firebase_full": [
+        "firebase_core",
+        "firebase_auth",
+        "cloud_firestore",
+        "cloud_functions",
+        "firebase_storage",
+        "firebase_messaging"
+      ],
+      "sentry": ["sentry_flutter"],
+      "analytics": ["mixpanel_flutter"],
+      "stripe": ["flutter_stripe"],
+      "intl": ["flutter_localizations", "intl"]
+    }
+  },
+  "dev_packages": {
+    "base": [
+      "very_good_analysis",
+      "build_runner",
+      "riverpod_generator",
+      "riverpod_lint",
+      "custom_lint",
+      "freezed",
+      "json_serializable"
+    ],
+    "conditional": {}
+  },
+  "structure": {
+    "base": {
+      "lib": ["main.dart", "main_dev.dart", "main_stg.dart", "main_prod.dart"],
+      "lib/src": ["{project_name}_app.dart"],
+      "lib/src/config": ["app_flavor.dart", "app_env.dart", "app_env_fields.dart"],
+      "lib/src/common_widgets": ["error_placeholder.dart", "empty_placeholder.dart", "loading_placeholder.dart"],
+      "lib/src/constants": ["app_sizes.dart"],
+      "lib/src/exceptions": ["app_exception.dart", "app_exception_code.dart"],
+      "lib/src/localization": ["string_hardcoded.dart"],
+      "lib/src/routing": [
+        "app_router.dart",
+        "app_route.dart",
+        "route_names.dart",
+        "routes.dart"
+      ],
+      "lib/src/routing/initialization": [
+        "app_startup_controller.dart",
+        "app_startup_widget_wrapper.dart"
+      ],
+      "lib/src/services": ["error_logger.dart"],
+      "lib/src/utils": ["ref_extension.dart", "string_extension.dart"],
+      "lib/src/features": [],
+      "lib/src/features/home": [],
+      "lib/src/features/home/presentation": ["home_screen.dart"]
+    },
+    "conditional": {
+      "sentry": {
+        "lib/src/routing": ["go_router_delegate_listener.dart"]
+      },
+      "intl": {
+        "lib/src/localization": ["localization.dart"]
+      }
+    }
+  },
+  "root_files": [".fvmrc", "analysis_options.yaml", "lefthook.yaml", "commitlint.config.js", "package.json"],
+  "flags": {
+    "firebase": "firebase != none",
+    "firebase_auth": "firebase == auth_firestore",
+    "firebase_full": "firebase == full",
+    "sentry": "observability != none",
+    "analytics": "observability == sentry_analytics",
+    "stripe": "payment == stripe",
+    "intl": "localization == intl"
+  },
+  "features_path": "lib/src/features",
+  "feature_template": {
+    "{feature}": [],
+    "{feature}/presentation": ["{feature}_screen.dart", "{feature}_controller.dart"],
+    "{feature}/application": ["{feature}_service.dart"],
+    "{feature}/domain": ["{feature}_model.dart"],
+    "{feature}/data": ["{feature}_repository.dart"]
+  }
+}

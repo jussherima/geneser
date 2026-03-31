@@ -1,0 +1,43 @@
+import 'package:{{project_name}}/src/config/app_env_fields.dart';
+import 'package:{{project_name}}/src/config/app_flavor.dart';
+
+class AppEnv implements AppEnvFields {
+  const AppEnv._({
+    required this.apiBaseUrl,
+{{#if sentry}}    required this.sentryDsn,
+{{/if sentry}}{{#if stripe}}    required this.stripePublishableKey,
+{{/if stripe}}  });
+
+  factory AppEnv.fromFlavor(AppFlavor flavor) {
+    switch (flavor) {
+      case AppFlavor.dev:
+        return const AppEnv._(
+          apiBaseUrl: 'https://api-dev.example.com',
+{{#if sentry}}          sentryDsn: '',
+{{/if sentry}}{{#if stripe}}          stripePublishableKey: '',
+{{/if stripe}}        );
+      case AppFlavor.stg:
+        return const AppEnv._(
+          apiBaseUrl: 'https://api-stg.example.com',
+{{#if sentry}}          sentryDsn: '',
+{{/if sentry}}{{#if stripe}}          stripePublishableKey: '',
+{{/if stripe}}        );
+      case AppFlavor.prod:
+        return const AppEnv._(
+          apiBaseUrl: 'https://api.example.com',
+{{#if sentry}}          sentryDsn: const String.fromEnvironment('SENTRY_DSN'),
+{{/if sentry}}{{#if stripe}}          stripePublishableKey: const String.fromEnvironment('STRIPE_PK'),
+{{/if stripe}}        );
+    }
+  }
+
+  @override
+  final String apiBaseUrl;
+{{#if sentry}}
+  @override
+  final String sentryDsn;
+{{/if sentry}}{{#if stripe}}
+  @override
+  final String stripePublishableKey;
+{{/if stripe}}
+}

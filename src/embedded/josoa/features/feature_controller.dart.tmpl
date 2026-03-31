@@ -1,0 +1,29 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:{{project_name}}/src/features/{{feature_name_snake}}/application/{{feature_name_snake}}_service.dart';
+import 'package:{{project_name}}/src/features/{{feature_name_snake}}/domain/{{feature_name_snake}}_model.dart';
+
+part '{{feature_name_snake}}_controller.g.dart';
+
+@riverpod
+class {{feature_name_pascal}}Controller extends _${{feature_name_pascal}}Controller {
+  @override
+  FutureOr<List<{{feature_name_pascal}}>> build() async {
+    return ref.watch({{feature_name_camel}}ServiceProvider).getAll();
+  }
+
+  Future<void> create({{feature_name_pascal}} item) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read({{feature_name_camel}}ServiceProvider).create(item);
+      return ref.read({{feature_name_camel}}ServiceProvider).getAll();
+    });
+  }
+
+  Future<void> delete(String id) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read({{feature_name_camel}}ServiceProvider).delete(id);
+      return ref.read({{feature_name_camel}}ServiceProvider).getAll();
+    });
+  }
+}

@@ -1,0 +1,70 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+{{#if firebase}}import 'package:cloud_firestore/cloud_firestore.dart';
+{{/if firebase}}import 'package:{{project_name}}/src/features/{{feature_name_snake}}/domain/{{feature_name_snake}}_model.dart';
+
+part '{{feature_name_snake}}_repository.g.dart';
+
+class {{feature_name_pascal}}Repository {
+{{#if firebase}}  {{feature_name_pascal}}Repository(this._firestore);
+
+  final FirebaseFirestore _firestore;
+
+  CollectionReference<Map<String, dynamic>> get _collection =>
+      _firestore.collection('{{feature_name_snake}}s');
+
+  Future<List<{{feature_name_pascal}}>> fetchAll() async {
+    final snapshot = await _collection.get();
+    return snapshot.docs
+        .map((doc) => {{feature_name_pascal}}.fromMap(doc.data(), doc.id))
+        .toList();
+  }
+
+  Future<{{feature_name_pascal}}?> fetchById(String id) async {
+    final doc = await _collection.doc(id).get();
+    if (!doc.exists) return null;
+    return {{feature_name_pascal}}.fromMap(doc.data()!, doc.id);
+  }
+
+  Future<void> create({{feature_name_pascal}} item) async {
+    await _collection.doc(item.id).set(item.toMap());
+  }
+
+  Future<void> update({{feature_name_pascal}} item) async {
+    await _collection.doc(item.id).update(item.toMap());
+  }
+
+  Future<void> delete(String id) async {
+    await _collection.doc(id).delete();
+  }
+{{/if firebase}}{{#unless firebase}}  {{feature_name_pascal}}Repository();
+
+  final List<{{feature_name_pascal}}> _items = [];
+
+  Future<List<{{feature_name_pascal}}>> fetchAll() async {
+    return List.unmodifiable(_items);
+  }
+
+  Future<{{feature_name_pascal}}?> fetchById(String id) async {
+    return _items.where((item) => item.id == id).firstOrNull;
+  }
+
+  Future<void> create({{feature_name_pascal}} item) async {
+    _items.add(item);
+  }
+
+  Future<void> update({{feature_name_pascal}} item) async {
+    final index = _items.indexWhere((e) => e.id == item.id);
+    if (index != -1) _items[index] = item;
+  }
+
+  Future<void> delete(String id) async {
+    _items.removeWhere((e) => e.id == id);
+  }
+{{/unless firebase}}}
+
+@riverpod
+{{feature_name_pascal}}Repository {{feature_name_camel}}Repository(Ref ref) {
+{{#if firebase}}  return {{feature_name_pascal}}Repository(FirebaseFirestore.instance);
+{{/if firebase}}{{#unless firebase}}  return {{feature_name_pascal}}Repository();
+{{/unless firebase}}}

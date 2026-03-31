@@ -1,0 +1,5 @@
+abstract interface class AppEnvFields {
+  String get apiBaseUrl;
+{{#if sentry}}  String get sentryDsn;
+{{/if sentry}}{{#if stripe}}  String get stripePublishableKey;
+{{/if stripe}}}

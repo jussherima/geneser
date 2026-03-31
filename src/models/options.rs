@@ -70,7 +70,7 @@ fn stable_version(pkg: &str) -> Option<&'static str> {
         // Utilities
         "equatable" => Some("^2.0.5"),
         "dartz" => Some("^0.10.1"),
-        "intl" => Some("^0.19.0"),
+        "intl" => Some("any"),  // version pinned by flutter_localizations SDK
         _ => None,
     }
 }

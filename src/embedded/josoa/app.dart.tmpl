@@ -1,0 +1,55 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+{{#if intl}}import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:{{project_name}}/src/localization/localization.dart';
+{{/if intl}}import 'package:{{project_name}}/src/config/app_flavor.dart';
+import 'package:{{project_name}}/src/routing/app_router.dart';
+{{#if sentry}}import 'package:{{project_name}}/src/routing/go_router_delegate_listener.dart';
+{{/if sentry}}import 'package:{{project_name}}/src/routing/initialization/app_startup_widget_wrapper.dart';
+
+class {{project_name_pascal}}App extends ConsumerWidget {
+  const {{project_name_pascal}}App({required this.flavor, super.key});
+
+  final AppFlavor flavor;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appRouter = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
+      routerConfig: appRouter,
+      title: '{{project_name_pascal}}',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+{{#if intl}}      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: SupportedLocale.values.map((e) => e.locale),
+{{/if intl}}      restorationScopeId: 'app',
+      builder: (context, child) {
+        return Banner(
+          message: flavor.name.toUpperCase(),
+          location: BannerLocation.topStart,
+          color: flavor == AppFlavor.prod ? Colors.transparent : Colors.red,
+          child: AppStartupWidgetWrapper(
+            onLoaded: (_) =>{{#if sentry}} GoRouterDelegateListener(
+              child: child ?? const SizedBox.shrink(),
+            ),{{/if sentry}}{{#unless sentry}} child ?? const SizedBox.shrink(),{{/unless sentry}}
+          ),
+        );
+      },
+    );
+  }
+}

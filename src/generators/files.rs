@@ -41,6 +41,28 @@ fn to_camel_case(s: &str) -> String {
     }
 }
 
+/// Extracts (feature_name, template_key) from a file name.
+/// E.g. "profile_screen.dart" -> ("profile", "feature_screen.dart")
+///      "profile_repository.dart" -> ("profile", "feature_repository.dart")
+///      "profile.dart" (in domain dir) -> ("profile", "feature_model.dart")
+fn extract_feature_template(file: &str) -> Option<(String, String)> {
+    let suffixes = [
+        "_screen.dart",
+        "_controller.dart",
+        "_repository.dart",
+        "_service.dart",
+        "_model.dart",
+    ];
+    for suffix in &suffixes {
+        if file.ends_with(suffix) {
+            let feature = file.replace(suffix, "");
+            let template_key = format!("feature{}", suffix);
+            return Some((feature, template_key));
+        }
+    }
+    None
+}
+
 /// Render a template string with variable substitution and conditional blocks.
 ///
 /// Supports:
@@ -262,13 +284,14 @@ pub fn generate_code_with_andrea(
             // Look up template by file name
             let content = if let Some(tmpl) = templates.get(file.as_str()) {
                 render_template(tmpl, &vars, flags)
-            } else if file.ends_with("_screen.dart") {
-                let feature = file.replace("_screen.dart", "");
+            } else if let Some((feature, template_key)) = extract_feature_template(file) {
                 let feature_pascal = to_pascal_case(&feature);
+                let feature_camel = to_camel_case(&feature);
                 let mut fvars = vars.clone();
                 fvars.insert("feature_name_pascal".to_string(), feature_pascal);
-                fvars.insert("feature_name_snake".to_string(), feature.clone());
-                if let Some(tmpl) = templates.get("feature_screen.dart") {
+                fvars.insert("feature_name_snake".to_string(), feature);
+                fvars.insert("feature_name_camel".to_string(), feature_camel);
+                if let Some(tmpl) = templates.get(&template_key) {
                     render_template(tmpl, &fvars, flags)
                 } else {
                     format!("// TODO: Implement {}\n", file)

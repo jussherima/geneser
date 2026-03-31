@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: true
+  commands:
+    analyze:
+      run: dart analyze --fatal-infos
+    format:
+      run: dart format --set-exit-if-changed .
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx commitlint --edit {1}

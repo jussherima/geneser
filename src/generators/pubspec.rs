@@ -3,6 +3,13 @@ use anyhow::{Context, Result};
 use std::fs;
 use std::path::Path;
 
+/// Packages that come from the Flutter SDK and need `sdk: flutter` syntax.
+const SDK_PACKAGES: &[&str] = &["flutter_localizations", "flutter_test", "flutter_driver"];
+
+fn is_sdk_package(pkg: &str) -> bool {
+    SDK_PACKAGES.contains(&pkg)
+}
+
 pub fn add_dependencies(
     project_dir: &str,
     packages: &[String],
@@ -23,8 +30,12 @@ pub fn add_dependencies(
             if pubspec.contains(&format!("\n  {}:", pkg)) {
                 continue;
             }
-            let version = strategy.version_for(pkg);
-            new_deps.push_str(&format!("  {}: {}\n", pkg, version));
+            if is_sdk_package(pkg) {
+                new_deps.push_str(&format!("  {}:\n    sdk: flutter\n", pkg));
+            } else {
+                let version = strategy.version_for(pkg);
+                new_deps.push_str(&format!("  {}: {}\n", pkg, version));
+            }
         }
         if !new_deps.is_empty() {
             pubspec.insert_str(pos + deps_marker.len(), &new_deps);
@@ -56,8 +67,12 @@ pub fn add_dev_dependencies(
             if pubspec.contains(&format!("\n  {}:", pkg)) {
                 continue;
             }
-            let version = strategy.version_for(pkg);
-            new_deps.push_str(&format!("  {}: {}\n", pkg, version));
+            if is_sdk_package(pkg) {
+                new_deps.push_str(&format!("  {}:\n    sdk: flutter\n", pkg));
+            } else {
+                let version = strategy.version_for(pkg);
+                new_deps.push_str(&format!("  {}: {}\n", pkg, version));
+            }
         }
         if !new_deps.is_empty() {
             pubspec.insert_str(pos + dev_deps_marker.len(), &new_deps);
@@ -69,8 +84,12 @@ pub fn add_dev_dependencies(
             if pubspec.contains(&format!("\n  {}:", pkg)) {
                 continue;
             }
-            let version = strategy.version_for(pkg);
-            pubspec.push_str(&format!("  {}: {}\n", pkg, version));
+            if is_sdk_package(pkg) {
+                pubspec.push_str(&format!("  {}:\n    sdk: flutter\n", pkg));
+            } else {
+                let version = strategy.version_for(pkg);
+                pubspec.push_str(&format!("  {}: {}\n", pkg, version));
+            }
         }
     }
 

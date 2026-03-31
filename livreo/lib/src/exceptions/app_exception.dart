@@ -1,0 +1,41 @@
+import 'package:livreo/src/exceptions/app_exception_code.dart';
+
+sealed class AppException implements Exception {
+  AppException(this.code, this.message);
+
+  final AppExceptionCode code;
+  final String message;
+
+  @override
+  String toString() => 'AppException($code): $message';
+}
+
+class NetworkException extends AppException {
+  NetworkException([String message = 'Network error'])
+      : super(AppExceptionCode.network, message);
+}
+
+class DataNotFoundException extends AppException {
+  DataNotFoundException([String message = 'Data not found'])
+      : super(AppExceptionCode.dataNotFound, message);
+}
+
+class ServerException extends AppException {
+  ServerException([String message = 'Server error'])
+      : super(AppExceptionCode.server, message);
+}
+
+class UnauthenticatedException extends AppException {
+  UnauthenticatedException([String message = 'Not authenticated'])
+      : super(AppExceptionCode.unauthenticated, message);
+}
+
+class WrongPasswordException extends AppException {
+  WrongPasswordException([String message = 'Wrong password'])
+      : super(AppExceptionCode.wrongPassword, message);
+}
+
+class EmailAlreadyInUseException extends AppException {
+  EmailAlreadyInUseException([String message = 'Email already in use'])
+      : super(AppExceptionCode.emailAlreadyInUse, message);
+}

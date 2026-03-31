@@ -1,0 +1,27 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:{{project_name}}/src/features/{{feature_name_snake}}/data/{{feature_name_snake}}_repository.dart';
+import 'package:{{project_name}}/src/features/{{feature_name_snake}}/domain/{{feature_name_snake}}_model.dart';
+
+part '{{feature_name_snake}}_service.g.dart';
+
+class {{feature_name_pascal}}Service {
+  {{feature_name_pascal}}Service(this._repository);
+
+  final {{feature_name_pascal}}Repository _repository;
+
+  Future<List<{{feature_name_pascal}}>> getAll() => _repository.fetchAll();
+
+  Future<{{feature_name_pascal}}?> getById(String id) => _repository.fetchById(id);
+
+  Future<void> create({{feature_name_pascal}} item) => _repository.create(item);
+
+  Future<void> update({{feature_name_pascal}} item) => _repository.update(item);
+
+  Future<void> delete(String id) => _repository.delete(id);
+}
+
+@riverpod
+{{feature_name_pascal}}Service {{feature_name_camel}}Service(Ref ref) {
+  return {{feature_name_pascal}}Service(ref.watch({{feature_name_camel}}RepositoryProvider));
+}

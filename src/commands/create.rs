@@ -4,6 +4,7 @@ use crate::models::template_config::TemplateConfig;
 use crate::models::template_definition::TemplateDefinition;
 use crate::registry::loader::load_local_templates;
 use crate::templates::code_with_andrea::CodeWithAndreaTemplate;
+use crate::templates::josoa::JosoaTemplate;
 use crate::templates::custom::CustomTemplate;
 use crate::ui::prompts;
 use anyhow::{Context, Result};
@@ -42,6 +43,12 @@ pub const OFFICIAL_TEMPLATES: &[(&str, &str, bool, &str)] = &[
         include_str!("../config/templates/riverpod_minimal.json"),
         false,
         include_str!("../config/templates/docs/riverpod_minimal.md"),
+    ),
+    (
+        "Josoa (Production-grade)",
+        include_str!("../config/templates/josoa.json"),
+        true,
+        include_str!("../config/templates/docs/josoa.md"),
     ),
 ];
 
@@ -138,7 +145,7 @@ pub fn run(name: Option<String>) -> Result<()> {
 
     // 3. Files
     let files_created = if uses_dart_templates {
-        let tmpl_map = CodeWithAndreaTemplate::templates(&project_name);
+        let tmpl_map = get_embedded_templates(template_idx, &project_name);
         files::generate_code_with_andrea(
             &project_name,
             &project_name,
@@ -157,17 +164,32 @@ pub fn run(name: Option<String>) -> Result<()> {
     };
     println!("  {} {} fichiers generes.", style("✓").green(), files_created);
 
-    // 4. Root config files (CWA Medium uniquement)
-    if uses_dart_templates && !config.root_files.is_empty() {
-        let mut vars = HashMap::new();
-        vars.insert("project_name".to_string(), project_name.clone());
-        let root_count =
-            root_files::generate(&project_name, &config.root_files, &vars, &config.flags)?;
-        println!(
-            "  {} {} fichiers racine generes.",
-            style("✓").green(),
-            root_count
-        );
+    // 4. Root config files (embedded templates only)
+    if uses_dart_templates {
+        let root_tmpl_map = get_embedded_root_templates(template_idx);
+        // Parse JSON def to get root_files list
+        let (_, json_src, _, _) = OFFICIAL_TEMPLATES[template_idx];
+        let def: TemplateDefinition = serde_json::from_str(json_src).unwrap();
+        let root_file_pairs: Vec<(String, String)> = def
+            .root_files
+            .iter()
+            .filter_map(|name| {
+                root_tmpl_map
+                    .get(name.as_str())
+                    .map(|tmpl| (name.clone(), tmpl.to_string()))
+            })
+            .collect();
+        if !root_file_pairs.is_empty() {
+            let mut vars = HashMap::new();
+            vars.insert("project_name".to_string(), project_name.clone());
+            let root_count =
+                root_files::generate(&project_name, &root_file_pairs, &vars, &config.flags)?;
+            println!(
+                "  {} {} fichiers racine generes.",
+                style("✓").green(),
+                root_count
+            );
+        }
     }
 
     // 5. Pubspec
@@ -189,6 +211,39 @@ pub fn run(name: Option<String>) -> Result<()> {
     );
     println!("  cd {}", project_name);
     Ok(())
+}
+
+/// Returns the embedded template map for the given official template index.
+fn get_embedded_templates(template_idx: usize, project_name: &str) -> HashMap<String, &'static str> {
+    // Map JSON name to embedded templates
+    let (_, json_src, _, _) = OFFICIAL_TEMPLATES[template_idx];
+    if json_src.contains("\"Josoa\"") {
+        JosoaTemplate::templates(project_name)
+    } else {
+        CodeWithAndreaTemplate::templates(project_name)
+    }
+}
+
+/// Returns the embedded root file templates for the given official template index.
+fn get_embedded_root_templates(template_idx: usize) -> HashMap<&'static str, &'static str> {
+    let (_, json_src, _, _) = OFFICIAL_TEMPLATES[template_idx];
+    if json_src.contains("\"Josoa\"") {
+        HashMap::from([
+            (".fvmrc", crate::embedded::josoa::FVMRC),
+            ("analysis_options.yaml", crate::embedded::josoa::ANALYSIS_OPTIONS),
+            ("lefthook.yaml", crate::embedded::josoa::LEFTHOOK),
+            ("commitlint.config.js", crate::embedded::josoa::COMMITLINT_CONFIG),
+            ("package.json", crate::embedded::josoa::PACKAGE_JSON),
+        ])
+    } else {
+        HashMap::from([
+            (".fvmrc", crate::embedded::code_with_andrea::FVMRC),
+            ("analysis_options.yaml", crate::embedded::code_with_andrea::ANALYSIS_OPTIONS),
+            ("lefthook.yaml", crate::embedded::code_with_andrea::LEFTHOOK),
+            ("commitlint.config.js", crate::embedded::code_with_andrea::COMMITLINT_CONFIG),
+            ("package.json", crate::embedded::code_with_andrea::PACKAGE_JSON),
+        ])
+    }
 }
 
 /// Flux interactif entièrement piloté par un `TemplateDefinition` JSON.
@@ -219,8 +274,10 @@ fn run_json_template(project_name: &str, def: &TemplateDefinition) -> Result<Tem
         }
     }
 
-    // CWA Medium : "home" toujours présent
-    if def.name.contains("Medium") && !feature_list.contains(&"home".to_string()) {
+    // CWA Medium & Josoa : "home" toujours présent
+    if (def.name.contains("Medium") || def.name == "Josoa")
+        && !feature_list.contains(&"home".to_string())
+    {
         feature_list.insert(0, "home".to_string());
     }
 

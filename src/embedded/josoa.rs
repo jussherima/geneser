@@ -1,0 +1,40 @@
+// Josoa embedded templates
+pub const MAIN_DART: &str = include_str!("josoa/main.dart.tmpl");
+pub const MAIN_DEV_DART: &str = include_str!("josoa/main_dev.dart.tmpl");
+pub const MAIN_STG_DART: &str = include_str!("josoa/main_stg.dart.tmpl");
+pub const MAIN_PROD_DART: &str = include_str!("josoa/main_prod.dart.tmpl");
+pub const APP_DART: &str = include_str!("josoa/app.dart.tmpl");
+pub const APP_FLAVOR: &str = include_str!("josoa/app_flavor.dart.tmpl");
+pub const APP_ENV: &str = include_str!("josoa/app_env.dart.tmpl");
+pub const APP_ENV_FIELDS: &str = include_str!("josoa/app_env_fields.dart.tmpl");
+pub const APP_ROUTER: &str = include_str!("josoa/app_router.dart.tmpl");
+pub const APP_ROUTE: &str = include_str!("josoa/app_route.dart.tmpl");
+pub const ROUTE_NAMES: &str = include_str!("josoa/route_names.dart.tmpl");
+pub const ROUTES: &str = include_str!("josoa/routes.dart.tmpl");
+pub const GO_ROUTER_DELEGATE_LISTENER: &str = include_str!("josoa/go_router_delegate_listener.dart.tmpl");
+pub const APP_STARTUP_CONTROLLER: &str = include_str!("josoa/app_startup_controller.dart.tmpl");
+pub const APP_STARTUP_WIDGET_WRAPPER: &str = include_str!("josoa/app_startup_widget_wrapper.dart.tmpl");
+pub const APP_EXCEPTION: &str = include_str!("josoa/app_exception.dart.tmpl");
+pub const APP_EXCEPTION_CODE: &str = include_str!("josoa/app_exception_code.dart.tmpl");
+pub const ERROR_PLACEHOLDER: &str = include_str!("josoa/error_placeholder.dart.tmpl");
+pub const EMPTY_PLACEHOLDER: &str = include_str!("josoa/empty_placeholder.dart.tmpl");
+pub const LOADING_PLACEHOLDER: &str = include_str!("josoa/loading_placeholder.dart.tmpl");
+pub const ERROR_LOGGER: &str = include_str!("josoa/error_logger.dart.tmpl");
+pub const REF_EXTENSION: &str = include_str!("josoa/ref_extension.dart.tmpl");
+pub const STRING_EXTENSION: &str = include_str!("josoa/string_extension.dart.tmpl");
+pub const APP_SIZES: &str = include_str!("josoa/app_sizes.dart.tmpl");
+pub const STRING_HARDCODED: &str = include_str!("josoa/string_hardcoded.dart.tmpl");
+pub const LOCALIZATION: &str = include_str!("josoa/localization.dart.tmpl");
+pub const HOME_SCREEN: &str = include_str!("josoa/features/home_screen.dart.tmpl");
+pub const FEATURE_SCREEN: &str = include_str!("josoa/features/feature_screen.dart.tmpl");
+pub const FEATURE_REPOSITORY: &str = include_str!("josoa/features/feature_repository.dart.tmpl");
+pub const FEATURE_SERVICE: &str = include_str!("josoa/features/feature_service.dart.tmpl");
+pub const FEATURE_MODEL: &str = include_str!("josoa/features/feature_model.dart.tmpl");
+pub const FEATURE_CONTROLLER: &str = include_str!("josoa/features/feature_controller.dart.tmpl");
+
+// Root config templates
+pub const ANALYSIS_OPTIONS: &str = include_str!("josoa/root/analysis_options.yaml.tmpl");
+pub const FVMRC: &str = include_str!("josoa/root/fvmrc.tmpl");
+pub const LEFTHOOK: &str = include_str!("josoa/root/lefthook.yaml.tmpl");
+pub const COMMITLINT_CONFIG: &str = include_str!("josoa/root/commitlint.config.js.tmpl");
+pub const PACKAGE_JSON: &str = include_str!("josoa/root/package.json.tmpl");

@@ -1,0 +1,51 @@
+import 'dart:async';
+
+{{#if firebase}}import 'package:firebase_core/firebase_core.dart';
+{{/if firebase}}import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+{{#if sentry}}import 'package:sentry_flutter/sentry_flutter.dart';
+{{/if sentry}}{{#if stripe}}import 'package:flutter_stripe/flutter_stripe.dart';
+{{/if stripe}}import 'package:{{project_name}}/src/{{project_name}}_app.dart';
+import 'package:{{project_name}}/src/config/app_env.dart';
+import 'package:{{project_name}}/src/config/app_flavor.dart';
+{{#if sentry}}import 'package:{{project_name}}/src/services/error_logger.dart';
+{{/if sentry}}
+
+Future<void> runMainApp(AppFlavor flavor) async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final env = AppEnv.fromFlavor(flavor);
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+{{#if sentry}}
+
+  await SentryFlutter.init((options) {
+    options
+      ..dsn = env.sentryDsn
+      ..environment = flavor.name
+      ..tracesSampleRate = 1.0;
+  });
+{{/if sentry}}
+{{#if firebase}}
+
+  await Firebase.initializeApp();
+{{/if firebase}}
+{{#if stripe}}
+
+  Stripe.publishableKey = env.stripePublishableKey;
+  await Stripe.instance.applySettings();
+{{/if stripe}}
+
+  final container = ProviderContainer();
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: {{project_name_pascal}}App(flavor: flavor),
+    ),
+  );
+}

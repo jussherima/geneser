@@ -1,0 +1,10 @@
+enum AppExceptionCode {
+  network,
+  dataNotFound,
+  server,
+{{#if firebase}}  unauthenticated,
+  wrongPassword,
+  emailAlreadyInUse,
+{{/if firebase}}{{#if stripe}}  payment,
+{{/if stripe}}  unknown,
+}
